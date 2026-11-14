@@ -24,6 +24,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: 題庫與課程格式檢查
         run: node scripts/validate.mjs
+      - name: 實驗室任務測試
+        run: node scripts/test-labs.mjs
       - name: 整理要發布的檔案
         run: |
           mkdir _site
