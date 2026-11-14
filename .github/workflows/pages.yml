@@ -3,9 +3,6 @@ name: 部署到 GitHub Pages
 on:
   push:
     branches: [main]
-  workflow_run:
-    workflows: ["每週更新題庫"]
-    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -25,9 +22,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: 題庫格式檢查
+      - name: 題庫與課程格式檢查
         run: node scripts/validate.mjs
       - name: 整理要發布的檔案
         run: |

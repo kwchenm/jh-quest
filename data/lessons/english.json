@@ -1,0 +1,102 @@
+{"id":"english","lessons":{
+"en7a1":{"ic":"🙋","hook":"歡迎來到「英文小鎮」！入境處的警衛會問每個人：「Who are you?」你要用正確的 be 動詞（am / is / are）報上身分，答錯就不能進城！",
+"cards":[
+{"e":"🪪","t":"be 動詞三兄弟","b":"・**I** 搭配 **am**\n・**he / she / it / 單數名詞** 搭配 **is**\n・**you / we / they / 複數名詞** 搭配 **are**\nMy sister and I ＝ 兩個人（複數），所以用 **are**。","chk":["My sister and I ___ students.","are","is","am"]},
+{"e":"👤","t":"人稱代名詞與所有格","b":"I → **my**、you → **your**、he → **his**、she → **her**、it → **its**、we → **our**、they → **their**。\n**所有格放在名詞前面**：This is my brother. **His** name is Tom.","chk":["This is my brother. ___ name is Tom.","His","He","Him"]},
+{"e":"📦","t":"名詞的複數","b":"・一般加 **s**：book → books\n・**s / x / ch / sh** 結尾加 **es**：box → **boxes**\n・**子音 ＋ y** 去 y 加 **ies**：baby → babies\n・不規則：child → children","chk":["There are three ___ on the desk.","boxes","box","boxs"]},
+{"e":"🔭","t":"this / that / these / those","b":"近的單數 **this**、遠的單數 **that**、近的複數 **these**、遠的複數 **those**。\nLook at **those** dogs over there.（dogs 是複數，又在遠處）","chk":["Look at ___ dogs over there. They are cute.","those","that","this"]}
+],
+"game":{"type":"sort","title":"am / is / are 分類","ask":"這個主詞後面要接 am、is 還是 are？","buckets":["am","is","are"],"items":[["I",0],["She",1],["They",2],["The dogs",2],["My brother",1],["You",2]],"recap":"I am；he/she/it/單數 is；you/we/they/複數 are。"}},
+
+"en7a2":{"ic":"🎬","hook":"你是電視臺的現場記者，鏡頭對準街頭：「Look! A dog is running!」要即時轉播正在發生的事，就要用現在進行式。還要報導這條街上有什麼、東西放在哪裡！",
+"cards":[
+{"e":"🎬","t":"現在進行式：be ＋ V-ing","b":"表示「**現在正在**做某事」，常搭配 now、Look!、Listen!。\n例：Look! The baby **is sleeping** now.","chk":["Look! The baby ___ now.","is sleeping","sleeps","are sleeping"]},
+{"e":"✏️","t":"V-ing 的變化","b":"點開看看三種變化：","flip":[["一般：直接加 ing","play → playing"],["e 結尾：去 e 再加 ing","write → writing"],["短母音＋單子音：重複字尾再加 ing","swim → swimming"]],"chk":["They are ___ in the pool.","swimming","swiming","swim"]},
+{"e":"🏠","t":"There is / There are","b":"There **is** ＋ 單數；There **are** ＋ 複數。\n有兩個以上名詞並列時，**由最靠近 be 動詞的名詞決定**：There **is** a pen and two books in my bag.\n介系詞：in（裡面）、on（上面）、under（下面）、**between A and B**（A 和 B 之間）。","chk":["There ___ a pen and two books in my bag.","is","are","am"]},
+{"e":"🚫","t":"祈使句","b":"用原形動詞開頭，表示命令或請求：**Open** the window.\n否定要在前面加 **Don't**：**Don't open** the window.","chk":["___ open the window. It's cold outside.","Don't","Not","No"]}
+],
+"game":{"type":"order","title":"拼出正確的句子","ask":"依序點選單字，拼成「他們正在泳池裡游泳」。","items":["They","are","swimming","in","the","pool"],"recap":"現在進行式：主詞 ＋ be ＋ V-ing。"}},
+
+"en7b1":{"ic":"⏰","hook":"你要幫「時間管理大師」記錄一整週的日常習慣：他每天幾點起床？多久運動一次？用現在簡單式和頻率副詞，把他的生活寫成日記！",
+"cards":[
+{"e":"3️⃣","t":"第三人稱單數的動詞","b":"主詞是 he / she / it / 單數名詞時，動詞要變化：\n・一般加 **s**：work → works\n・**o / s / x / ch / sh** 結尾加 **es**：go → **goes**\n・**子音 ＋ y** 去 y 加 **ies**：study → **studies**\n・have → **has**","chk":["My father ___ to work by bus every day.","goes","go","going"]},
+{"e":"❓","t":"do / does 助動詞","b":"疑問句與否定句借用助動詞，**後面動詞一律回到原形**：\n・**Does** your sister **like** music?\n・She **doesn't have** breakfast at home.\n主詞是第三人稱單數用 does / doesn't，其他用 do / don't。","chk":["___ your sister like music?","Does","Do","Is"]},
+{"e":"📊","t":"頻率副詞","b":"**always**（總是）> **usually**（通常）> **often**（經常）> **sometimes**（有時）> **seldom**（很少）> **never**（從不）。\n問頻率用 **How often**：A: How often do you go to the library? B: Twice a week.","chk":["A: ___ do you go to the library?  B: Twice a week.","How often","How many","How much"]}
+],
+"game":{"type":"order","title":"頻率由高到低","ask":"由最常發生，排到最不常發生。","items":["always","usually","often","sometimes","seldom","never"],"recap":"always 100% → never 0%。"}},
+
+"en7b2":{"ic":"🕰️","hook":"時光機啟動！你要把今天的日記改寫成「昨天」版本：I go to school 變成 I went to school。所有動詞都要穿越到過去式！",
+"cards":[
+{"e":"🕰️","t":"was / were","b":"be 動詞的過去式：**I / he / she / it → was**；**you / we / they → were**。\n常搭配 yesterday、last night、two years ago。","chk":["I ___ at home yesterday.","was","am","were"]},
+{"e":"➕","t":"規則動詞加 ed","b":"・一般加 **ed**：watch → watched\n・e 結尾只加 **d**：like → liked\n・**子音＋y** 去 y 加 **ied**：study → studied\n・**短母音＋單子音** 重複字尾加 ed：stop → stopped","chk":["They ___ a movie last night.","watched","watch","watches"]},
+{"e":"🔀","t":"不規則動詞","b":"這些動詞要硬背，點開看看：","flip":[["go","went"],["buy","bought"],["write","wrote"],["see","saw"],["eat","ate"],["take","took"]],"chk":["She ___ to Japan two years ago.","went","goes","gone"]},
+{"e":"❌","t":"Did ＋ 原形動詞","b":"過去式的疑問句、否定句借用 **did / didn't**，**動詞回到原形**：\n・**Did** you **finish** your homework?\n・We **didn't buy** any milk.","chk":["Did you ___ your homework?","finish","finished","finishes"]}
+],
+"game":{"type":"match","title":"動詞三態：原形配過去式","ask":"把動詞原形和它的過去式連起來。","pairs":[["go","went"],["buy","bought"],["write","wrote"],["see","saw"],["eat","ate"]],"recap":"go-went、buy-bought、write-wrote、see-saw、eat-ate。"}},
+
+"en8a1":{"ic":"🚀","hook":"太空旅行社要寫廣告文案：「明天出發！比別的旅行團更快、更便宜，是全宇宙最棒的行程！」你要用未來式、比較級和最高級，寫出最吸引人的廣告。",
+"cards":[
+{"e":"🔮","t":"未來式","b":"兩種常見寫法，後面都接**原形動詞**：\n・**will ＋ V**：We **will visit** our grandparents next Sunday.\n・**be going to ＋ V**：She **is going to buy** a new bike tomorrow.","chk":["We ___ visit our grandparents next Sunday.","will","are","did"]},
+{"e":"📈","t":"比較級：A 比 B 更…","b":"・短形容詞加 **er**：tall → taller；big → **bigger**；happy → **happier**\n・多音節形容詞用 **more ＋ 形容詞**：more interesting\n句型：A ＋ be ＋ 比較級 ＋ **than** ＋ B。","chk":["An elephant is ___ than a horse.","bigger","big","biggest"]},
+{"e":"🥇","t":"最高級：最…的","b":"・短形容詞：**the ＋ adj-est**（the tallest）\n・多音節：**the most ＋ adj**（the most interesting）\n・範圍用 in / of：the tallest girl **in** her class\n・不規則：good → better → **best**","chk":["Mary is the ___ girl in her class.","tallest","tall","taller"]}
+],
+"game":{"type":"match","title":"比較級與最高級","ask":"把形容詞原級和它的比較級、最高級連起來。","pairs":[["good","better – best"],["big","bigger – biggest"],["happy","happier – happiest"],["interesting","more interesting – most interesting"]],"recap":"短字加 er/est，長字用 more/most，good 不規則。"}},
+
+"en8a2":{"ic":"🔗","hook":"歡迎來到「語法接龍公園」！這裡有個規定：有些動詞後面只能接 V-ing，有些只能接 to V，接錯就會掉進池塘！你要記住每一個動詞愛接什麼。",
+"cards":[
+{"e":"🔁","t":"愛接 V-ing 的動詞","b":"**enjoy、finish、mind、practice** 後面接**動名詞（V-ing）**：I enjoy **playing** basketball.\n**介系詞後面**也接 V-ing：Thank you **for helping** me.","chk":["I enjoy ___ basketball after school.","playing","to play","play"]},
+{"e":"➡️","t":"愛接 to V 的動詞","b":"**want、hope、decide、plan** 後面接**不定詞（to ＋ 原形）**：He wants **to be** a doctor.","chk":["He wants ___ a doctor in the future.","to be","being","be"]},
+{"e":"🔗","t":"連接詞","b":"・**because**（因為）與 **so**（所以）不能同時用\n・**if**（如果）：條件句用**現在式代替未來式**\n・**when**（當…的時候）、**but**（但是）\n例：**If** it rains tomorrow, we will stay home.","chk":["___ it rains tomorrow, we will stay home.","If","Because","So"]}
+],
+"game":{"type":"sort","title":"V-ing 還是 to V？","ask":"這個動詞後面接動名詞（V-ing），還是不定詞（to V）？","buckets":["＋ V-ing","＋ to V"],"items":[["enjoy",0],["want",1],["finish",0],["hope",1],["practice",0],["decide",1]],"recap":"enjoy / finish / practice 接 V-ing；want / hope / decide 接 to V。"}},
+
+"en8b1":{"ic":"📸","hook":"偵探問：「案發當時，你在做什麼？」你要用過去進行式交代不在場證明：「I was watching TV when she came home.」順便學會讓別人做事的特殊動詞！",
+"cards":[
+{"e":"📸","t":"過去進行式","b":"**was / were ＋ V-ing**，表示「過去某個時間點**正在**做某事」。\n・**when** ＋ 短動作（打斷）：I **was watching** TV when my mother came home.\n・**while** ＋ 持續動作：While they **were having** dinner, the phone rang.","chk":["I ___ TV when my mother came home.","was watching","watched","am watching"]},
+{"e":"🙋","t":"使役動詞：讓某人做某事","b":"**make / let / have ＋ 受詞 ＋ 原形動詞**（不加 to）：\n・My mother made me **clean** my room.\n・My parents let me **go** to the party.","chk":["My mother made me ___ my room.","clean","to clean","cleaning"]},
+{"e":"👀","t":"感官動詞與授與動詞","b":"・**感官動詞** see / watch / hear ＋ 受詞 ＋ **原形動詞或 V-ing**：I saw a boy **run** across the street.\n・**授與動詞** give ＋ 人 ＋ 物，或 give ＋ 物 ＋ **to** ＋ 人：He gave **me a book**.","chk":["I saw a boy ___ across the street.","run","to run","ran"]}
+],
+"game":{"type":"order","title":"不在場證明","ask":"依序點選單字，拼成「她回家時，我正在看電視」。","items":["I","was","watching","TV","when","she","came","home"],"recap":"when 後接短動作（過去式），主要動作用過去進行式。"}},
+
+"en8b2":{"ic":"🪞","hook":"鏡子迷宮！每面鏡子都會問你一句話：「……, aren't you?」只有答對附加問句，才能走出迷宮。路上還會遇到反身代名詞和「one、the other」的謎題。",
+"cards":[
+{"e":"🔢","t":"one / another / the other","b":"・兩個東西：**One** is red, and **the other** is blue.（剩下的那一個）\n・三個以上：One…, **another**…, the other…\n例：I have two pens. One is red, and **the other** is blue.","chk":["I have two pens. One is red, and ___ is blue.","the other","another","other"]},
+{"e":"🪞","t":"反身代名詞","b":"主詞和受詞是**同一個人**時，受詞用反身代名詞：\n**myself、yourself、himself、herself、itself、ourselves、themselves**。\nShe looked at **herself** in the mirror.","chk":["She looked at ___ in the mirror.","herself","her","hers"]},
+{"e":"❓","t":"附加問句","b":"口訣：**肯定句接否定、否定句接肯定**，主詞用代名詞。\n・You are a student, **aren't you**?\n・Tom doesn't like fish, **does he**?\n・一般動詞用 do / does / did，助動詞（can、will）就重複它。","chk":["You are a student, ___?","aren't you","are you","don't you"]},
+{"e":"📏","t":"so … that 與 too … to","b":"・**so ＋ 形容詞 ＋ that ＋ 子句**：如此…以致於\n・**too ＋ 形容詞 ＋ to ＋ V**：太…而不能\n例：He is **too** young **to** drive a car.","chk":["He is ___ young to drive a car.","too","so","such"]}
+],
+"game":{"type":"match","title":"附加問句配對","ask":"把句子和它的附加問句連起來。","pairs":[["You are a student,","aren't you?"],["Tom doesn't like fish,","does he?"],["She can swim,","can't she?"],["They went home,","didn't they?"]],"recap":"肯定接否定、否定接肯定；be 對 be，一般動詞對 do/does/did。"}},
+
+"en9a1":{"ic":"🧳","hook":"旅行社要幫你寫一份「人生旅遊履歷」：我去過哪些國家？在這座城市住了多久？作業寫完了嗎？現在完成式專門處理「從過去一路延續到現在」的事。",
+"cards":[
+{"e":"🧳","t":"現在完成式：have / has ＋ p.p.","b":"連接「過去」和「現在」，常見三種用法：\n・**持續**：I **have lived** in Taipei **for** ten years.\n・**經驗**：Have you **ever** been to Japan?\n・**完成**：He has **already** finished his homework.\n主詞是第三人稱單數用 **has**。","chk":["I ___ in Taipei for ten years.","have lived","live","lived"]},
+{"e":"⌛","t":"for 與 since","b":"・**for ＋ 一段時間**：for ten years、for two hours\n・**since ＋ 過去的時間點**：since 2020、since last Monday\nShe has studied English **since** 2020.","chk":["She has studied English ___ 2020.","since","for","in"]},
+{"e":"🌏","t":"ever / already / yet 與 been / gone","b":"・**ever**（曾經，用在疑問句）、**never**（從未）\n・**already**（已經，肯定句）、**yet**（還，否定與疑問句）\n・**have been to**＝去過（人已回來）；**have gone to**＝去了（人不在這裡）","chk":["Tom ___ to Kaohsiung. He is not here now.","has gone","has been","goes"]},
+{"e":"🔀","t":"常考過去分詞","b":"現在完成式要用過去分詞，點開看看：","flip":[["go","gone"],["see","seen"],["write","written"],["take","taken"],["eat","eaten"]],"chk":["Have you ever ___ a whale?","seen","saw","see"]}
+],
+"game":{"type":"sort","title":"for 還是 since？","ask":"這個時間用法要搭配 for 還是 since？","buckets":["for ＋ 一段時間","since ＋ 起點時間"],"items":[["ten years",0],["last Monday",1],["two hours",0],["2020",1],["three days",0],["I was a child",1]],"recap":"一段長度用 for；一個起點用 since。"}},
+
+"en9a2":{"ic":"🎭","hook":"劇場後臺，導演在問：「誰是主角？誰被主角影響？」被動語態讓「受詞」當主角：The window was broken by Tom. 同時你還要分清楚 exciting 和 excited。",
+"cards":[
+{"e":"🎭","t":"被動語態：be ＋ p.p.","b":"主詞是**被**做動作的對象：**be ＋ 過去分詞**，要說明是誰做的，用 **by ＋ 施動者**。\n・主動：People speak English in many countries.\n・被動：English **is spoken** in many countries.","chk":["English ___ in many countries.","is spoken","speaks","is speaking"]},
+{"e":"⏪","t":"被動語態的時態","b":"時態改變 **be 動詞**，後面一律用過去分詞：\n・現在：is / are ＋ p.p.\n・過去：**was / were ＋ p.p.**\n例：The window **was broken** by Tom yesterday.（yesterday ＝過去）","chk":["The window ___ by Tom yesterday.","was broken","broke","is broken"]},
+{"e":"😮","t":"-ing 與 -ed 形容詞","b":"・**-ing**：令人感到…的（形容**事物**）：The movie is **interesting**.\n・**-ed**：感到…的（形容**人**）：I am **interested** in science.\n固定用法：be interested in…","chk":["I am ___ in science.","interested","interesting","interest"]}
+],
+"game":{"type":"sort","title":"形容事物還是形容人？","ask":"這個形容詞通常用來形容「事物」（令人…），還是「人」（感到…）？","buckets":["形容事物：令人…（-ing）","形容人：感到…（-ed）"],"items":[["exciting",0],["excited",1],["boring",0],["bored",1],["surprising",0],["surprised",1]],"recap":"事物 -ing（令人…）；人 -ed（感到…）。"}},
+
+"en9b1":{"ic":"🔎","hook":"名偵探需要一支「放大鏡」，把一個人或物的資訊接在後面：the man **who** stole the bike…。這支放大鏡就是關係代名詞。還要練習不被「間接問句」的語序騙到！",
+"cards":[
+{"e":"🔎","t":"who / which / that","b":"關係代名詞用來**補充說明前面的名詞（先行詞）**：\n・先行詞是**人** → **who**（或 that）：The girl **who** is singing is my sister.\n・先行詞是**物** → **which**（或 that）：This is the book **which** I bought yesterday.\n・先行詞同時有人和動物 → 用 **that**","chk":["The girl ___ is singing is my sister.","who","which","whose"]},
+{"e":"🗣️","t":"間接問句","b":"問句放進別的句子裡，要改成**直述句語序**：**疑問詞 ＋ 主詞 ＋ 動詞**（不倒裝、不加 do / does）。\n・Where **does he live**? → I don't know where **he lives**.\n・Can you tell me what time **it is**?","chk":["Can you tell me what time ___?","it is","is it","does it"]},
+{"e":"❔","t":"whether 與 that 名詞子句","b":"・**whether … or not**：是否\nI'm not sure **whether** he will come or not.\n・**that** 子句：I know **that** he is a teacher.","chk":["I'm not sure ___ he will come or not.","whether","what","which"]}
+],
+"game":{"type":"sort","title":"who 還是 which？","ask":"這個先行詞要搭配 who 還是 which？","buckets":["who（人）","which（物）"],"items":[["the girl",0],["the book",1],["the boy",0],["the car",1],["the teacher",0],["the dog",1]],"recap":"人用 who，物用 which；兩者都可以用 that。"}},
+
+"en9b2":{"ic":"🏅","hook":"會考決賽！Boss 同時丟出五種文法陷阱：although 和 but 不能一起用、look forward to 後面接什麼、neither…nor 的動詞怎麼變……通過這一關，你就是文法王者！",
+"cards":[
+{"e":"⚔️","t":"although 與 so that","b":"・**Although** he was tired, he kept working.（雖然…；**不可再加 but**）\n・**so that**：以便，表示目的：He got up early **so that** he could catch the first bus.","chk":["___ he was tired, he kept working.","Although","Because","If"]},
+{"e":"🧮","t":"常考句型","b":"・**look forward to ＋ V-ing**：期待…（這個 to 是介系詞）\n・**It takes ＋ 人 ＋ 時間 ＋ to V**：某人花多久時間做某事\n・**spend ＋ 時間 ＋ V-ing**：花時間做某事","chk":["I look forward to ___ you soon.","seeing","see","saw"]},
+{"e":"🤝","t":"neither … nor","b":"**Neither A nor B** 作主詞時，動詞與**最靠近的主詞（B）**一致：\nNeither Tom nor his brothers **are** at home now.（his brothers 是複數）","chk":["Neither Tom nor his brothers ___ at home now.","are","is","am"]}
+],
+"game":{"type":"order","title":"拼出會考句型","ask":"依序點選單字，拼成「我花三十分鐘走路上學」。","items":["It","takes","me","thirty","minutes","to","walk","to","school"],"recap":"It takes + 人 + 時間 + to V。"}}
+}}

@@ -1,14 +1,14 @@
 {
   "updated": "2026-11-14",
   "subjects": [
-    {"id": "chinese", "name": "國文", "icon": "📖", "color": "#f472b6", "file": "chinese.json"},
-    {"id": "english", "name": "英語", "icon": "🔤", "color": "#60a5fa", "file": "english.json"},
-    {"id": "math", "name": "數學", "icon": "📐", "color": "#fbbf24", "file": "math.json"},
-    {"id": "biology", "name": "生物", "icon": "🧬", "color": "#4ade80", "file": "biology.json"},
-    {"id": "physchem", "name": "理化", "icon": "⚗️", "color": "#a78bfa", "file": "physchem.json"},
-    {"id": "earth", "name": "地球科學", "icon": "🌏", "color": "#22d3ee", "file": "earth.json"},
-    {"id": "history", "name": "歷史", "icon": "🏛️", "color": "#fb923c", "file": "history.json"},
-    {"id": "geography", "name": "地理", "icon": "🗺️", "color": "#34d399", "file": "geography.json"},
-    {"id": "civics", "name": "公民", "icon": "⚖️", "color": "#f87171", "file": "civics.json"}
+    {"id": "chinese", "name": "國文", "icon": "📖", "color": "#f472b6", "file": "chinese.json", "lessons": "lessons/chinese.json", "mascot": "🐱", "guide": "墨墨貓"},
+    {"id": "english", "name": "英語", "icon": "🔤", "color": "#60a5fa", "file": "english.json", "lessons": "lessons/english.json", "mascot": "🦜", "guide": "派派鸚鵡"},
+    {"id": "math", "name": "數學", "icon": "📐", "color": "#fbbf24", "file": "math.json", "lessons": "lessons/math.json", "mascot": "🤖", "guide": "方圓機器人"},
+    {"id": "biology", "name": "生物", "icon": "🧬", "color": "#4ade80", "file": "biology.json", "lessons": "lessons/biology.json", "mascot": "🐸", "guide": "蛙蛙博士"},
+    {"id": "physchem", "name": "理化", "icon": "⚗️", "color": "#a78bfa", "file": "physchem.json", "lessons": "lessons/physchem.json", "mascot": "🦊", "guide": "狐狸博士"},
+    {"id": "earth", "name": "地球科學", "icon": "🌏", "color": "#22d3ee", "file": "earth.json", "lessons": "lessons/earth.json", "mascot": "🐢", "guide": "地球龜"},
+    {"id": "history", "name": "歷史", "icon": "🏛️", "color": "#fb923c", "file": "history.json", "lessons": "lessons/history.json", "mascot": "🦉", "guide": "貓頭鷹老師"},
+    {"id": "geography", "name": "地理", "icon": "🗺️", "color": "#34d399", "file": "geography.json", "lessons": "lessons/geography.json", "mascot": "🐧", "guide": "企鵝領航員"},
+    {"id": "civics", "name": "公民", "icon": "⚖️", "color": "#f87171", "file": "civics.json", "lessons": "lessons/civics.json", "mascot": "🐘", "guide": "象長老"}
   ]
 }
