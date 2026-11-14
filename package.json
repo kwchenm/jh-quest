@@ -1,0 +1,15 @@
+{
+  "name": "jh-quest",
+  "private": true,
+  "type": "module",
+  "description": "國中知識星航：國中全科闖關學習網站與每週自動更新題庫",
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "update": "node scripts/update-bank.mjs",
+    "serve": "npx --yes serve -l 5173 ."
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "zod": "latest"
+  }
+}

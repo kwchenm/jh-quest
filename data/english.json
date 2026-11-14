@@ -1,0 +1,98 @@
+{"id":"english","units":[
+{"id":"en7a1","g":7,"s":"上","t":"be 動詞、代名詞與名詞","k":"am / is / are、人稱代名詞、所有格、名詞複數","q":[
+["My sister and I ____ students.","are","is","am","be","主詞 My sister and I 是複數，be 動詞用 are。"],
+["This is my brother. ____ name is Tom.","His","He","Him","He's","名詞 name 前面要用所有格 His。"],
+["There are three ____ on the desk.","boxes","box","boxs","boxies","字尾是 x 的名詞，複數加 es。"],
+["A: Is that your book?  B: Yes, ____.","it is","it isn't","that's","I am","簡答時用代名詞 it 代替 that，肯定簡答不可縮寫。"],
+["____ is your father?  He is a doctor.","What","Who","How","Where","詢問職業用 What。問「是誰」才用 Who。"],
+["Look at ____ dogs over there. They are cute.","those","that","this","it","dogs 是複數，且在遠處（over there），用 those。"]
+]},
+{"id":"en7a2","g":7,"s":"上","t":"現在進行式與 There is / are","k":"be + V-ing、祈使句、地方介系詞","q":[
+["Look! The baby ____ now.","is sleeping","sleeps","sleep","are sleeping","有 Look! 和 now，表示正在進行，用 is + V-ing。"],
+["They are ____ in the pool.","swimming","swiming","swim","swims","swim 是短母音加單子音結尾，要重複字尾 m 再加 ing。"],
+["There ____ a pen and two books in my bag.","is","are","am","be","There is / are 的 be 動詞由最靠近的名詞（a pen）決定。"],
+["____ open the window. It's cold outside.","Don't","Not","No","Doesn't","否定祈使句用 Don't + 原形動詞。"],
+["The cat is ____ the chair and the table.","between","in","on","under","between A and B 表示「在 A 和 B 之間」。"],
+["A: What are you doing?  B: I ____ a letter.","am writing","writing","write","am write","現在進行式：am + writing（去 e 加 ing）。"]
+]},
+{"id":"en7b1","g":7,"s":"下","t":"現在簡單式與頻率副詞","k":"第三人稱單數、助動詞 do / does、頻率副詞","q":[
+["My father ____ to work by bus every day.","goes","go","going","is go","主詞第三人稱單數，現在簡單式動詞加 es。"],
+["____ your sister like music?","Does","Do","Is","Are","主詞 your sister 是第三人稱單數，疑問句用 Does。"],
+["She doesn't ____ breakfast at home.","have","has","having","had","doesn't 後面接原形動詞。"],
+["Tom is ____ late for school. He is a good student.","never","always","usually","often","依句意，好學生「從不」遲到。"],
+["A: ____ do you go to the library?  B: Twice a week.","How often","How many","How long","How much","回答是頻率（一週兩次），用 How often 詢問。"],
+["Amy ____ English every night.","studies","studys","study","studying","子音 + y 結尾的動詞，去 y 加 ies。"]
+]},
+{"id":"en7b2","g":7,"s":"下","t":"過去簡單式","k":"was / were、規則與不規則動詞、did","q":[
+["I ____ at home yesterday.","was","am","were","is","yesterday 是過去時間，主詞 I 用 was。"],
+["They ____ a movie last night.","watched","watch","watches","watching","last night 為過去時間，規則動詞加 ed。"],
+["Did you ____ your homework?","finish","finished","finishes","finishing","助動詞 Did 後面接原形動詞。"],
+["She ____ to Japan two years ago.","went","goes","go","gone","go 的過去式是 went。"],
+["We didn't ____ any milk this morning.","buy","bought","buys","buying","didn't 後面接原形動詞。"],
+["He ____ a letter to his grandmother last week.","wrote","writes","written","write","write 的過去式是 wrote，過去分詞是 written。"]
+]},
+{"id":"en8a1","g":8,"s":"上","t":"未來式與比較級、最高級","k":"will / be going to、形容詞比較","q":[
+["We ____ visit our grandparents next Sunday.","will","are","did","were","next Sunday 是未來時間，用 will + 原形動詞。"],
+["She is going to ____ a new bike tomorrow.","buy","buys","buying","bought","be going to 後面接原形動詞。"],
+["An elephant is ____ than a horse.","bigger","big","biggest","more big","比較級；big 要重複字尾 g 再加 er。"],
+["Mary is the ____ girl in her class.","tallest","tall","taller","most tall","有 the 及範圍 in her class，用最高級。"],
+["This book is ____ than that one.","more interesting","interestinger","most interesting","interesting","多音節形容詞的比較級用 more + 形容詞。"],
+["My English is good, but his is ____.","better","gooder","best","more good","good 的比較級是 better，最高級是 best。"]
+]},
+{"id":"en8a2","g":8,"s":"上","t":"動名詞、不定詞與連接詞","k":"enjoy V-ing、want to V、because / so / if / when","q":[
+["I enjoy ____ basketball after school.","playing","to play","play","played","enjoy 後面接動名詞（V-ing）。"],
+["He wants ____ a doctor in the future.","to be","being","be","is","want 後面接不定詞（to + 原形動詞）。"],
+["____ it rains tomorrow, we will stay home.","If","Because","So","But","if 表示條件；條件句用現在式代替未來式。"],
+["She was sick, ____ she didn't go to school.","so","because","if","but","前因後果用 so（所以）。"],
+["____ English well is not easy.","Speaking","Speak","Speaks","Spoke","動名詞可當主詞，視為單數。"],
+["Thank you for ____ me.","helping","help","to help","helped","介系詞 for 後面接動名詞。"]
+]},
+{"id":"en8b1","g":8,"s":"下","t":"過去進行式與特殊動詞","k":"was / were V-ing、授與動詞、使役動詞、感官動詞","q":[
+["I ____ TV when my mother came home.","was watching","watched","am watching","watch","過去某個時間點正在進行的動作，用過去進行式。"],
+["While they ____ dinner, the phone rang.","were having","had","are having","have","while 引導持續進行的動作，用過去進行式。"],
+["My mother made me ____ my room.","clean","to clean","cleaning","cleaned","使役動詞 make 後面接原形動詞。"],
+["I saw a boy ____ across the street.","run","to run","ran","runs","感官動詞 see 後面接原形動詞或 V-ing。"],
+["He gave ____.","me a book","a book me","a book for me","to me a book","授與動詞句型：give + 人 + 物，或 give + 物 + to + 人。"],
+["My parents let me ____ to the party.","go","to go","going","went","使役動詞 let 後面接原形動詞。"]
+]},
+{"id":"en8b2","g":8,"s":"下","t":"不定代名詞、反身代名詞與附加問句","k":"one / the other、myself、附加問句、so / too","q":[
+["I have two pens. One is red, and ____ is blue.","the other","another","other","others","兩者中的「另一個」用 the other。"],
+["She looked at ____ in the mirror.","herself","her","hers","she","主詞和受詞是同一人，用反身代名詞。"],
+["You are a student, ____?","aren't you","are you","don't you","do you","前面是肯定句，附加問句用否定；be 動詞對應 aren't。"],
+["Tom doesn't like fish, ____?","does he","doesn't he","is he","did he","前面是否定句，附加問句用肯定。"],
+["The box is ____ heavy that I can't carry it.","so","too","very","such","so + 形容詞 + that 子句，表示「如此……以致於」。"],
+["He is ____ young to drive a car.","too","so","such","enough","too + 形容詞 + to V，表示「太……而不能」。"]
+]},
+{"id":"en9a1","g":9,"s":"上","t":"現在完成式","k":"have / has + p.p.、for / since、already / yet","q":[
+["I ____ in Taipei for ten years.","have lived","live","am living","lived","for + 一段時間，表示從過去持續到現在，用現在完成式。"],
+["She has studied English ____ 2020.","since","for","in","at","since + 過去時間點；for + 一段時間。"],
+["Have you ____ been to Japan?","ever","never","yet","since","詢問「曾經」的經驗用 ever。"],
+["He has ____ finished his homework. He can play now.","already","yet","ever","since","already 用於肯定句，表示「已經」；yet 用於否定句與疑問句。"],
+["Tom ____ to Kaohsiung. He is not here now.","has gone","has been","goes","was","has gone to 表示「已經去了（人不在這裡）」；has been to 表示「去過」。"],
+["I haven't seen him ____ last Monday.","since","for","from","in","last Monday 是過去的時間點，用 since。"]
+]},
+{"id":"en9a2","g":9,"s":"上","t":"被動語態與分詞形容詞","k":"be + p.p.、by、-ing / -ed 形容詞","q":[
+["English ____ in many countries.","is spoken","speaks","is speaking","spoke","英語「被說」，用被動語態 be + 過去分詞。"],
+["The window ____ by Tom yesterday.","was broken","broke","is broken","breaks","yesterday 為過去時間，用過去式被動 was + p.p.。"],
+["The movie is very ____.","interesting","interested","interest","interests","修飾事物用 -ing（令人感到……的）。"],
+["I am ____ in science.","interested","interesting","interest","interests","人「感到」有興趣用 -ed；be interested in 為固定用法。"],
+["This bridge ____ in 1990.","was built","built","is building","builds","橋是「被建造」，且為過去時間。"],
+["The news made us ____.","excited","exciting","excite","excitedly","人感到興奮用 excited。"]
+]},
+{"id":"en9b1","g":9,"s":"下","t":"關係子句與名詞子句","k":"who / which / that、間接問句、whether","q":[
+["The girl ____ is singing is my sister.","who","which","whose","whom","先行詞是人，且在子句中當主詞，用 who（或 that）。"],
+["This is the book ____ I bought yesterday.","which","who","where","what","先行詞是物，用 which（或 that）。"],
+["I don't know where ____.","he lives","does he live","he live","lives he","間接問句要用「疑問詞 + 主詞 + 動詞」的直述句語序。"],
+["Can you tell me what time ____?","it is","is it","it be","does it","間接問句語序：what time + 主詞 + 動詞。"],
+["I'm not sure ____ he will come or not.","whether","what","that","which","whether ... or not 表示「是否」。"],
+["The boy and his dog ____ are running in the park look happy.","that","who","which","whom","先行詞同時包含人和動物時，關係代名詞用 that。"]
+]},
+{"id":"en9b2","g":9,"s":"下","t":"會考綜合文法","k":"although、so that、動詞時態綜合、片語","q":[
+["____ he was tired, he kept working.","Although","Because","If","So","although 表示「雖然」，不可與 but 連用。"],
+["He got up early ____ he could catch the first bus.","so that","because of","although","until","so that 表示目的「以便」。"],
+["I look forward to ____ you soon.","seeing","see","saw","seen","look forward to 的 to 是介系詞，後面接 V-ing。"],
+["It takes me thirty minutes ____ to school.","to walk","walking","walk","walked","It takes + 人 + 時間 + to V。"],
+["She spent two hours ____ her homework.","doing","to do","do","did","人 + spend + 時間 + V-ing。"],
+["Neither Tom nor his brothers ____ at home now.","are","is","am","be","neither A nor B 的動詞與最靠近的主詞（his brothers）一致。"]
+]}
+]}
