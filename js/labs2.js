@@ -484,4 +484,5 @@ L.ch9b2 = timeLab('文學時光書架', '書架上的書依照時代排好了。
     ['找到《西遊記》等章回小說流行的時代', y => y === 1500, '**明代**流行章回小說，《西遊記》《三國演義》《水滸傳》都是代表。', 1500]
   ]
 });
+G.LABKIT2 = { timeLab, huntLab, pinLab, comicLab, world };   // 給第三批實驗室（labs3.js）共用
 })(typeof globalThis !== 'undefined' ? globalThis : window);

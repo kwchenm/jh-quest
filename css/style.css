@@ -435,3 +435,24 @@ details.quests summary b{color:var(--acc)}
   .chips{gap:6px}
   .chip{padding:6px 11px; font-size:.92rem}
 }
+
+/* ===== 第三批實驗室：地理、英語 ===== */
+.sky{fill:#0f1a3d} .mtn{fill:#8d6e63; stroke:#c7a58f; stroke-width:1.5} .rock{fill:#7c5a43}
+.ice{fill:#e6f4ff; stroke:#bfe3ff; stroke-width:2; transition:opacity .2s}
+.plateLine{fill:none; stroke:#fb7185; stroke-width:4; stroke-dasharray:8 5}
+.nightland{fill:#1a1d2e; stroke:#3a3f5c} .glow{fill:#ffe066; filter:drop-shadow(0 0 4px #ffd166)}
+.selhalf{fill:#ffd16633; stroke:#ffd166; stroke-width:2; cursor:pointer}
+.dline{stroke:#ffd166; stroke-width:2; stroke-dasharray:5 4}
+.windA{stroke:#93c5fd; stroke-width:4; stroke-linecap:round; marker-end:none}
+.warm{fill:none; stroke:#f97316; stroke-width:5; stroke-linecap:round; opacity:.9}
+.sand{fill:#d6b77a; stroke:#a58548} .border{stroke:#1a1a2e; stroke-width:3}
+.barOn{fill:#ffd166} .barOff{fill:#60a5fa88}
+.incbar{display:flex; align-items:center; gap:10px; width:100%; max-width:340px} .incbar span{color:var(--mute); flex:none} .incbar .meter{flex:1} .incbar b{color:var(--acc); flex:none}
+.pkg{display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; max-width:320px; background:#f5ecd6; border-radius:14px; padding:12px}
+.pk{background:#fff; color:#2b2112; border:2px dashed #b08a4a; border-radius:10px; padding:10px 6px; text-align:center; font-weight:700; cursor:pointer}
+.pk.tapl{background:#dcfce7; border-color:#16a34a} .pk.on{border-style:solid; border-color:#f59e0b; background:#fff7d6}
+.alibi{display:grid; gap:8px; width:100%}
+.al{display:flex; align-items:center; gap:10px; background:var(--card2); border:2px solid var(--line); border-radius:12px; padding:10px 12px; text-align:left; cursor:pointer; font-size:1rem}
+.al:hover{border-color:var(--acc)} .al.on{border-color:var(--acc); background:#4b3c0a}
+.al b{color:var(--acc)} .ale{font-size:1.6rem; flex:none}
+.crash{background:#5b1a2a; border:1px solid var(--bad); border-radius:12px; padding:6px 10px; text-align:center; font-weight:800; animation:shake .4s}

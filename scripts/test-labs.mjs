@@ -1,6 +1,7 @@
 // 實驗室自動測試：每個任務「進入時尚未達成」、「套用解法後達成」，且畫面、控制項都不會出錯
 import '../js/labs.js';
 import '../js/labs2.js';
+import '../js/labs3.js';
 import { readJSON } from './validate.mjs';
 const L = globalThis.LABS, errs = [];
 const man = readJSON('manifest.json');
@@ -39,5 +40,6 @@ for (const id of Object.keys(L)) {
     lab.view(t);
   } catch (e) { errs.push(`${id}: 例外 ${e.message}`); }
 }
+for (const u of units) if (!L[u]) errs.push(`${u}: 這個單元還沒有實驗室`);
 if (errs.length) { console.error(errs.join('\n')); process.exit(1); }
 console.log(`OK：${Object.keys(L).length} 個實驗室、${nm} 個任務全部可完成。`);
