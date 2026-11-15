@@ -22,6 +22,7 @@ async function playOne(uid, part = 'all') {
   const have = new Set(U.q.map(q => q[0]));
   const qs = U.q.map(q => ({ q: q[0], right: q[1] })).concat(L.cards.filter(c => c.chk && !have.has(c.chk[0])).map(c => ({ q: c.chk[0], right: c.chk[1] })));
   window.__fast = true;
+  const ov = document.querySelector('.ov'); if (ov) ov.remove();
   location.hash = '#/'; await sleep(40); location.hash = `#/play/${uid}/${part}`; await sleep(60);
   for (let step = 0; step < 900; step++) {
     await sleep(35);
@@ -34,7 +35,7 @@ async function playOne(uid, part = 'all') {
     if ($('.lab')) {
       seen.add('lab');
       if ($('#lnext')) { $('#lnext').click(); continue; }
-      const h = window.__lab; h.lab.missions[h.mi()].sol(h.s); $('#lok').click(); continue;
+      const h = window.__lab; h.lab.missions[h.mi()].sol(h.s); h.check(); continue;
     }
     if ($('.tiles') || ($('.lcard') && $('#go') && !$('.scan') && !$('.chk'))) {
       seen.add('restore');

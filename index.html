@@ -3,30 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1026">
 <title>國中知識星航｜動手玩的全科學習遊戲</title>
 <meta name="description" content="國中七～九年級全科學習遊戲：駕駛太空船降落星球，動手做互動實驗、收集知識碎片、玩小遊戲、打敗迷霧獸，把星球點亮。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 <div class="stars" aria-hidden="true"></div>
 <header class="top">
   <a class="brand" href="#/">🚀 <span>國中知識星航</span></a>
-  <nav>
-    <a href="#/" data-nav="home">星圖</a>
-    <a href="#/codex" data-nav="codex">圖鑑</a>
-    <a href="#/duel" data-nav="duel">對戰</a>
-    <a href="#/wrong" data-nav="wrong">錯題本</a>
-    <a href="#/me" data-nav="me">我的</a>
-    <button id="snd" class="sndb" title="開關音效" aria-label="開關音效">🔊</button>
+  <nav class="tabs" aria-label="主選單">
+    <a href="#/" data-nav="home"><i aria-hidden="true">🗺️</i><span>星圖</span></a>
+    <a href="#/codex" data-nav="codex"><i aria-hidden="true">📔</i><span>圖鑑</span></a>
+    <a href="#/duel" data-nav="duel"><i aria-hidden="true">⚔️</i><span>對戰</span></a>
+    <a href="#/wrong" data-nav="wrong"><i aria-hidden="true">📒</i><span>錯題</span><b class="badge" id="wbadge" hidden></b></a>
+    <a href="#/me" data-nav="me"><i aria-hidden="true">👤</i><span>我的</span></a>
   </nav>
+  <button id="snd" class="sndb" title="開關音效" aria-label="開關音效">🔊</button>
 </header>
 <main id="app"><p class="loading">星圖載入中…</p></main>
 <footer class="foot">
   <span id="bankInfo"></span>
   <span>依教育部 108 課綱學習內容編寫，跨康軒／翰林／南一版本共通主題。內容為原創，若有疑義請以課本為準。</span>
 </footer>
-<script src="js/labs.js"></script>
-<script src="js/app.js"></script>
+<script src="js/labs.js?v=5"></script>
+<script src="js/labs2.js?v=5"></script>
+<script src="js/app.js?v=5"></script>
 </body>
 </html>

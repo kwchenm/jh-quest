@@ -125,7 +125,8 @@ function confetti() {
 function toast(t) {
   if (!t) return;
   const d = document.createElement('div'); d.className = 'toast'; d.textContent = t;
-  d.style.bottom = (70 + $$('.toast').length * 40) + 'px';
+  const base = innerWidth <= 640 && !document.body.classList.contains('playing') ? 88 : 70;
+  d.style.bottom = (base + $$('.toast').length * 40) + 'px';
   document.body.appendChild(d); setTimeout(() => d.remove(), 1500);
 }
 const bad = b => { b.classList.add('bad'); setTimeout(() => b.classList.remove('bad'), 450); };
@@ -143,7 +144,7 @@ function heroHTML() {
   return `<section class="hero"><div><div class="who">${p.ship} ${esc(DB.cur)}　Lv.${lv}</div>
     <div class="xpbar"><i style="width:${Math.round((p.xp - a) / (b - a) * 100)}%"></i></div></div>
     <div class="stat"><span>星塵 <b>${p.coins} ✨</b></span><span>連續 <b>${p.streak}</b> 天</span>
-    <span>點亮星球 <b>${lit}</b></span><span>核心 <b>${Object.keys(p.core).reduce((n, id) => n + (UNITS[id] ? stars(id) : 0), 0)}</b></span></div></section>`;
+    <span>點亮星球 <b>${lit}</b></span><span>能量核心 <b>${Object.keys(p.core).reduce((n, id) => n + (UNITS[id] ? stars(id) : 0), 0)}</b></span></div></section>`;
 }
 function questHTML() {
   const d = daily();
@@ -160,19 +161,24 @@ function park(box, target) { const ship = $('.ship', box); if (!ship || !target)
 function nextUnit(u) { const l = subj(u.sid).units.filter(inGrade), i = l.findIndex(x => x.id === u.id); return i >= 0 ? l[i + 1] || null : null; }
 
 /* ---------- 星際航圖（首頁） ---------- */
+function nextPick() {
+  for (const s of [subj(DB.last), ...SUBJECTS].filter(Boolean)) { const u = s.units.filter(inGrade).find(v => stars(v.id) < 3); if (u) return u; }
+  return null;
+}
 function viewHome() {
-  const p = P();
+  const p = P(), nx = nextPick(), d = daily(), qd = QUESTS.filter(q => d.got[q[0]]).length;
   const nodes = SUBJECTS.map(s => {
     const us = s.units.filter(inGrade); if (!us.length) return '';
     const got = us.reduce((x, u) => x + stars(u.id), 0), max = us.length * 3;
     return `<a class="gnode" href="#/s/${s.id}" data-sid="${s.id}" style="--c:${s.color}"><span class="gorb ${got ? 'lit' : ''}">${s.icon}<i>${s.mascot}</i></span><b>${esc(s.name)}星系</b><small>★ ${got} / ${max}</small><span class="gbar"><i style="width:${max ? got / max * 100 : 0}%"></i></span></a>`;
   }).join('');
-  app.innerHTML = heroHTML() + questHTML() + `<h1>星際航圖</h1>
-    <p class="mute sm">知識星系被「遺忘迷霧」籠罩了！駕駛太空船降落每顆星球：動手做實驗、收集知識碎片、打敗迷霧獸，把星球一顆一顆重新點亮。</p>` +
-    gradeChips() + `<div class="space gal" id="sp">${nodes}<div class="ship">${p.ship}</div></div>
-    <div class="row c"><a class="btn ghost" href="#/duel">⚔️ 雙人對戰</a><a class="btn ghost" href="#/sprint">⏱ 迷霧突襲</a><a class="btn ghost" href="#/codex">📔 圖鑑</a></div>`;
-  const sp = $('#sp'), at = $(`[data-sid="${DB.last || ''}"] .gorb`, sp) || $('.gorb', sp);
-  park(sp, at);
+  app.innerHTML = heroHTML() +
+    (nx ? `<a class="cont" href="#/u/${nx.id}" style="--c:${subj(nx.sid).color}">${planet(nx)}<span class="ct2"><small>${stars(nx.id) ? '繼續點亮' : '下一站'}・${esc(subj(nx.sid).name)}星系</small><b>${esc(nx.t)}</b></span><span class="go">▶</span></a>` : '') +
+    `<details class="quests"><summary>🎯 今日任務 <b>${qd} / ${QUESTS.length}</b><span class="mute sm">　每完成一項 +30 ✨</span></summary><div class="qlist">${QUESTS.map(([k, name, need]) => `<span class="qst ${d.got[k] ? 'ok' : ''}">${d.got[k] ? '✅' : '◻️'} ${name}（${Math.min(d[k] || 0, need)}/${need}）</span>`).join('')}</div></details>
+    <h1>星際航圖</h1>` + gradeChips() + `<div class="space gal" id="sp">${nodes}<div class="ship">${p.ship}</div></div>
+    <div class="row c"><a class="btn ghost" href="#/sprint">⏱ 迷霧突襲</a><a class="btn ghost" href="#/duel">⚔️ 雙人對戰</a></div>`;
+  const sp = $('#sp'), at = () => $(`[data-sid="${DB.last || ''}"] .gorb`, sp) || $('.gorb', sp);
+  park(sp, at()); window.__repark = () => park(sp, at());
   sp.onclick = e => { const a = e.target.closest('.gnode'); if (!a) return; e.preventDefault(); DB.last = a.dataset.sid; save(); fly(sp, $('.gorb', a), () => { location.hash = a.getAttribute('href'); }); };
 }
 
@@ -191,8 +197,8 @@ function viewSubject(sid) {
     say(s, next ? `我是${s.guide}！點一顆星球，太空船就會飛過去。每顆星球有 **📡 探索、🎮 試煉、👾 Boss** 三個能量核心，全部拿到星球就會完全點亮。下一站建議：**${next.t}**。` : `這個年級的星球全部點亮了，太厲害了！去挑戰星系守護者吧。`) +
     gradeChips() + `<div class="row"><a class="btn" href="#/mix/${s.id}">👑 挑戰星系守護者</a></div>
     <div class="space" id="sp">${html || '<p class="mute">這個年級沒有此科目的星球。</p>'}<div class="ship">${p.ship}</div></div>`;
-  const sp = $('#sp'), at = $(`[data-uid="${p.at[sid] || (next && next.id) || ''}"] .pl`, sp) || $('.node .pl', sp);
-  park(sp, at);
+  const sp = $('#sp'), at = () => $(`[data-uid="${p.at[sid] || (next && next.id) || ''}"] .pl`, sp) || $('.node .pl', sp);
+  park(sp, at()); window.__repark = () => park(sp, at());
   sp.onclick = e => { const a = e.target.closest('.node'); if (!a) return; e.preventDefault(); p.at[sid] = a.dataset.uid; save(); fly(sp, $('.pl', a), () => { location.hash = a.getAttribute('href'); }); };
 }
 
@@ -251,6 +257,7 @@ function play(uid, part) {
   touchStreak(); save();
   app.innerHTML = `<div class="stage" style="--c:${s.color}"><div class="hud"><a href="#/u/${uid}" class="hx">✕</a><b>${esc(u.t)}</b><span class="dots" id="dots"></span></div><div id="sc"></div></div>`;
   const box = $('#sc'); let i = 0;
+  $('.hx', app).onclick = e => { if (i > 0 && !window.__fast && !confirm('確定要離開嗎？這一關還沒完成的部分不會保存。')) e.preventDefault(); };
   const run = () => {
     if (i >= steps.length) return finish(x);
     $('#dots').innerHTML = steps.map((_, k) => `<i class="${k < i ? 'd' : k === i ? 'c' : ''}"></i>`).join('');
@@ -296,53 +303,61 @@ function stepDialog(box, x, done) {
   draw();
 }
 
-/* --- 步驟：實驗室 --- */
+/* --- 步驟：實驗室（動手調整，達成任務就自動過關） --- */
 function stepLab(box, x, done) {
-  const lab = LABS[x.u.id], s = lab.init(); let mi = 0, tries = 0, solved = false;
+  const lab = LABS[x.u.id], s = lab.init(); let mi = 0, acts = 0, solved = false;
   const cur = () => lab.missions[mi];
-  const enter = () => { tries = 0; solved = false; s.mi = mi; if (cur().set) cur().set(s); };
   const txt = v => typeof v === 'function' ? v(s) : v;
-  const ctrlHTML = () => (lab.ctrl || []).map((c, i) => {
+  const ctrls = () => typeof lab.ctrl === 'function' ? lab.ctrl(s) : (lab.ctrl || []);
+  const fv = c => c.fmt ? c.fmt(s[c.k]) : s[c.k];
+  const enter = () => { acts = 0; solved = false; s.mi = mi; if (cur().set) cur().set(s); };
+  const ctrlHTML = () => ctrls().map((c, i) => {
     if (c.type === 'btn') return `<button class="lbtn" data-b="${i}">${esc(c.label)}</button>`;
-    if (c.type === 'toggle') return `<button class="lbtn tog ${s[c.k] ? 'on' : ''}" data-t="${c.k}">${s[c.k] ? '✅' : '⬜'} ${esc(c.label)}</button>`;
-    if (c.type === 'choice') return `<div class="lch"><span>${esc(c.label)}</span>${c.opts.map(o => `<button class="lbtn ${s[c.k] === o[0] ? 'on' : ''}" data-c="${c.k}" data-v="${esc(o[0])}">${esc(o[1])}</button>`).join('')}</div>`;
-    return `<label class="lsl"><span>${esc(c.label)}：<b data-val="${c.k}">${s[c.k]}</b>${c.unit || ''}</span><input type="range" data-s="${c.k}" min="${c.min}" max="${c.max}" step="${c.step || 1}" value="${s[c.k]}"></label>`;
+    if (c.type === 'toggle') return `<button class="lbtn tog ${s[c.k] ? 'on' : ''}" data-t="${i}" aria-pressed="${!!s[c.k]}">${s[c.k] ? '✅' : '⬜'} ${esc(c.label)}</button>`;
+    if (c.type === 'choice') return `<div class="lch"><span>${esc(c.label)}</span>${c.opts.map((o, j) => `<button class="lbtn ${s[c.k] === o[0] ? 'on' : ''}" data-c="${i}" data-j="${j}">${esc(o[1])}</button>`).join('')}</div>`;
+    return `<div class="lsl"><span>${esc(c.label)}：<b data-val="${i}">${fv(c)}</b>${c.unit || ''}</span><div class="slrow"><button class="nud" data-n="${i}" data-d="-1" aria-label="減少">−</button><input type="range" data-s="${i}" min="${c.min}" max="${c.max}" step="${c.step || 1}" value="${s[c.k]}" aria-label="${esc(c.label)}"><button class="nud" data-n="${i}" data-d="1" aria-label="增加">＋</button></div></div>`;
   }).join('');
   const readHTML = () => (lab.read ? lab.read(s) : []).map(r => `<div class="rd"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('');
   const draw = () => {
     box.innerHTML = `<div class="lab"><div class="labtop"><span class="tag">🧪 實驗室</span><b>${esc(lab.name)}</b><span class="mute sm">任務 ${mi + 1} / ${lab.missions.length}</span></div>
       ${mi === 0 ? say(x.s, lab.intro) : ''}
-      <div class="mis">🎯 ${md(cur().t)}</div>
+      <div class="mis" id="lm">🎯 ${md(cur().t)}</div>
       <div class="labview" id="lv">${lab.view(s)}</div><div class="reads" id="lr">${readHTML()}</div><div class="ctrls" id="lc">${ctrlHTML()}</div>
-      <div id="lf"></div><div class="row c" id="la"><button class="btn" id="lok">確認 ✔</button></div></div>`;
+      <div id="lf" aria-live="polite"></div><div class="row c" id="la"><button class="btn ghost" id="lhint">💡 給我提示</button></div></div>`;
   };
   const refresh = full => { $('#lv', box).innerHTML = lab.view(s); $('#lr', box).innerHTML = readHTML(); if (full) $('#lc', box).innerHTML = ctrlHTML(); };
-  const confirm = () => {
+  const check = () => {
+    if (solved) return;
     const m = cur();
-    if (m.ok(s)) {
-      solved = true; sfx.ok();
-      $('#lf', box).innerHTML = `<div class="exp good"><b class="ok">✔ 任務完成！</b><br>${md(txt(m.say))}</div>`;
-      $('#la', box).innerHTML = `<button class="btn pulse" id="lnext">${mi + 1 < lab.missions.length ? '下一個任務 →' : '完成實驗 🎉'}</button>`;
-    } else {
-      tries++; sfx.no();
-      $('#lf', box).innerHTML = `<div class="exp shake">🤔 還沒達成，再調整看看！${tries >= 2 && m.hint ? '<br>💡 提示：' + md(txt(m.hint)) : ''}</div>`;
-    }
+    if (!m.ok(s)) { if (++acts === 5) { const h = $('#lhint', box); if (h) h.classList.add('pulse'); } return; }
+    solved = true; sfx.ok();
+    $('#lm', box).classList.add('done');
+    $('#lf', box).innerHTML = `<div class="exp good pop"><b class="ok">✔ 任務完成！</b><br>${md(txt(m.say))}</div>`;
+    $('#la', box).innerHTML = `<button class="btn pulse" id="lnext">${mi + 1 < lab.missions.length ? '下一個任務 →' : '完成實驗 🎉'}</button>`;
+    const n = $('#lnext', box); if (n && n.scrollIntoView && !window.__fast) n.scrollIntoView({behavior: 'smooth', block: 'center'});
   };
-  box.oninput = e => { const k = e.target.dataset.s; if (!k || solved) return; s[k] = +e.target.value; const v = $(`[data-val="${k}"]`, box); if (v) v.textContent = s[k]; refresh(false); };
+  const hint = () => { const h = cur().hint; $('#lf', box).innerHTML = `<div class="exp pop">💡 ${h ? md(txt(h)) : '仔細看上面的讀數，想想任務要你做到什麼。'}</div>`; const b = $('#lhint', box); if (b) b.classList.remove('pulse'); };
+  const setVal = (c, i, v) => { s[c.k] = v; const el = $(`[data-val="${i}"]`, box); if (el) el.textContent = fv(c); };
+  box.oninput = e => { const i = e.target.dataset.s; if (i === undefined) return; setVal(ctrls()[+i], i, +e.target.value); refresh(false); };
+  box.onchange = e => { if (e.target.dataset.s !== undefined) check(); };
   box.onclick = e => {
     const t = e.target;
-    if (t.id === 'lok') return confirm();
-    if (t.id === 'lnext') { if (++mi >= lab.missions.length) { earn(x, 15, 10); bump('game'); return done(); } enter(); return draw(); }
-    if (solved) return;
+    if (t.closest('#lhint')) return hint();
+    if (t.closest('#lnext')) { if (++mi >= lab.missions.length) { earn(x, 15, 10); bump('game'); return done(); } enter(); draw(); return window.scrollTo(0, 0); }
     const tap = t.closest('[data-tap]');
-    if (tap && lab.tap) { lab.tap(s, tap.dataset.tap); sfx.tap(); return refresh(false); }
+    if (tap && lab.tap) { lab.tap(s, tap.dataset.tap); sfx.tap(); refresh(false); return check(); }
+    const nb = t.closest('.nud');
+    if (nb) { const i = +nb.dataset.n, c = ctrls()[i], st = c.step || 1;
+      const v = Math.min(c.max, Math.max(c.min, Math.round((s[c.k] + st * nb.dataset.d) / st) * st));
+      setVal(c, i, +v.toFixed(4)); const r = $(`[data-s="${i}"]`, box); if (r) r.value = s[c.k]; sfx.tap(); refresh(false); return check(); }
     const b = t.closest('.lbtn'); if (!b) return;
-    if (b.dataset.b !== undefined) lab.ctrl[+b.dataset.b].run(s);
-    else if (b.dataset.t) s[b.dataset.t] = !s[b.dataset.t];
-    else if (b.dataset.c) s[b.dataset.c] = b.dataset.v;
-    sfx.tap(); refresh(true);
+    const cs = ctrls();
+    if (b.dataset.b !== undefined) cs[+b.dataset.b].run(s);
+    else if (b.dataset.t !== undefined) { const c = cs[+b.dataset.t]; s[c.k] = !s[c.k]; if (c.run) c.run(s); }
+    else if (b.dataset.c !== undefined) { const c = cs[+b.dataset.c]; s[c.k] = c.opts[+b.dataset.j][0]; }
+    sfx.tap(); refresh(true); check();
   };
-  if (window.__fast) window.__lab = {s, lab, mi: () => mi};   // 自動測試用
+  if (window.__fast) window.__lab = {s, lab, mi: () => mi, check};
   enter(); draw();
 }
 
@@ -525,7 +540,7 @@ function battle(box, cfg, done) {
   const st = {hp: 100, hearts: H, combo: 0, maxCombo: 0, right: 0, total: 0, scan: cfg.timer ? 0 : 1, shield: cfg.timer ? 0 : 1, shieldOn: false, kills: 0, left: cfg.timer || 0};
   const Q = s => box.querySelector(s);
   box.innerHTML = `<div class="bt" id="bt">
-    <div class="foe" id="foe"><div class="fe" id="fe">${cfg.e}</div><div class="fname">${esc(cfg.name)}</div>${cfg.timer ? `<div class="timer" id="tm">${st.left}</div>` : '<div class="hpb"><i id="hp"></i></div>'}</div>
+    <div class="foe" id="foe"><div class="fe" id="fe">${cfg.e}</div><div class="finfo"><div class="fname">${esc(cfg.name)}</div>${cfg.timer ? `<div class="timer" id="tm">${st.left}</div>` : '<div class="hpb"><i id="hp"></i></div>'}</div></div>
     <div class="beam" id="beam"></div>
     <div class="mebar"><span class="me">${P().ship}</span><span id="hearts"></span><span class="combo" id="combo"></span><span class="skills">${cfg.timer ? '<b id="kills"></b>' : '<button class="skb" id="sk1"></button><button class="skb" id="sk2"></button>'}</span></div>
     <div id="qa"></div></div>`;
@@ -602,7 +617,7 @@ function stepBoss(box, x, done) {
 }
 function arena(cfg) {                           // 不屬於單一星球的戰鬥
   if (!cfg.qs.length) { app.innerHTML = `<a class="back" href="${cfg.back}">← 返回</a><p class="mute">目前沒有題目。</p>`; return; }
-  touchStreak(); save();
+  touchStreak(); save(); document.body.classList.add('playing');
   app.innerHTML = `<div class="stage"><div class="hud"><a href="${cfg.back}" class="hx">✕</a><b>${esc(cfg.title)}</b><span></span></div><div id="sc"></div></div>`;
   battle($('#sc'), cfg, res => {
     const p = P(), xp = res.right * 5, coins = res.win ? 10 + res.right : 0; let extra = '';
@@ -652,6 +667,7 @@ function viewDuel() {
 }
 function duel(qs) {
   const GOAL = 5, list = shuffle(qs), lock = [0, 0], KEYS = ['1234', '7890']; let pos = 0, qi = 0, over = false, left = 120, opts = [[], []];
+  document.body.classList.add('playing');
   app.innerHTML = `<div class="duel"><div class="dbar"><a href="#/duel" class="hx">✕</a><span>🟥</span><div class="track"><i id="orb">⚡</i></div><span>🟦</span><b class="timer" id="dt">${left}</b></div>
     <div class="dsides"><div class="dside a" id="d0"></div><div class="dside b" id="d1"></div></div></div>`;
   const side = k => { const q = list[qi % list.length]; opts[k] = shuffle([q.right, ...q.wrongs]);
@@ -728,7 +744,10 @@ function route() {
   RUN++; stopTimer(); document.onkeydown = null;
   const [, r, a, b] = location.hash.split('/');
   const nav = ['s', 'u', 'play', 'mix', 'learn', 'quiz', 'sprint'].includes(r) ? 'home' : (r || 'home');
-  $$('[data-nav]').forEach(n => n.classList.toggle('on', n.dataset.nav === nav));
+  $$('[data-nav]').forEach(n => { const on = n.dataset.nav === nav; n.classList.toggle('on', on); if (on) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current'); });
+  document.body.classList.toggle('playing', ['play', 'learn', 'quiz', 'mix'].includes(r));
+  window.__repark = null;
+  const wn = Object.keys(P().wrong).filter(id => QS[id]).length, wb = $('#wbadge'); if (wb) { wb.textContent = wn > 99 ? '99+' : wn; wb.hidden = !wn; }
   if (r === 's') viewSubject(a); else if (r === 'u') viewUnit(a); else if (r === 'play') play(a, b || 'all');
   else if (r === 'learn') play(a, 'all'); else if (r === 'quiz') play(a, 'b');
   else if (r === 'mix') viewMix(a); else if (r === 'sprint') viewSprint(); else if (r === 'duel') viewDuel();
@@ -746,10 +765,33 @@ const sndSync = () => { sndBtn.textContent = DB.mute ? '🔇' : '🔊'; };
 sndBtn.onclick = () => { DB.mute = !DB.mute; save(); sndSync(); if (!DB.mute) sfx.tap(); };
 sndSync();
 window.addEventListener('hashchange', route);
-let rz = null;
-window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { const r = location.hash.split('/')[1]; if (!r || r === 's') route(); }, 250); });
+let rz = null, lastW = innerWidth;
+window.addEventListener('resize', () => { if (Math.abs(innerWidth - lastW) < 2) return; lastW = innerWidth; clearTimeout(rz); rz = setTimeout(() => { if (window.__repark) window.__repark(); }, 200); });
+
+/* ---------- 第一次登艦：取名字、選年級、看懂玩法 ---------- */
+function onboard() {
+  const ov = document.createElement('div'); ov.className = 'ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+  ov.innerHTML = `<div class="ovbox"><div class="dmas">🚀</div><h1>歡迎登艦，新任艦長！</h1>
+    <p class="mute">知識星系被「遺忘迷霧」籠罩了。駕駛太空船降落每顆星球，完成三個關卡把它點亮：</p>
+    <div class="how"><div><b>📡</b>探索<small>動手做實驗<br>收集知識碎片</small></div><div><b>🎮</b>試煉<small>小遊戲<br>加深印象</small></div><div><b>👾</b>Boss<small>用學到的知識<br>打敗迷霧獸</small></div></div>
+    <label class="fld">艦長的名字<input type="text" id="obn" maxlength="12" autocomplete="off" value="${esc(DB.cur === '同學' ? '' : DB.cur)}" placeholder="例如：小美"></label>
+    <div class="fld">你現在是<div class="chips" id="obg">${GRADES.slice(1).map(([g, n]) => `<button class="chip ${DB.grade === g ? 'on' : ''}" data-g="${g}">${n}</button>`).join('')}<button class="chip ${!DB.grade ? 'on' : ''}" data-g="0">全部都想看</button></div></div>
+    <button class="btn wide" id="obgo">出發！🚀</button><p class="mute sm">之後可以在「我的」頁面修改，或新增其他使用者。</p></div>`;
+  document.body.appendChild(ov);
+  $('#obg', ov).onclick = e => { const b = e.target.closest('[data-g]'); if (!b) return; DB.grade = +b.dataset.g; $$('#obg .chip', ov).forEach(c => c.classList.toggle('on', c === b)); sfx.tap(); };
+  $('#obgo', ov).onclick = () => {
+    const n = $('#obn', ov).value.trim();
+    if (n && n !== DB.cur) {
+      if (!DB.profiles[n]) { DB.profiles[n] = DB.profiles[DB.cur] || blank(); const rest = {}; Object.keys(DB.profiles).forEach(k => { if (k !== DB.cur) rest[k] = DB.profiles[k]; }); DB.profiles = rest; }
+      DB.cur = n;
+    }
+    DB.seen = 1; save(); ov.remove(); sfx.win(); route();
+  };
+  setTimeout(() => { const i = $('#obn', ov); if (i && innerWidth > 640) i.focus(); }, 50);
+}
 loadBank().then(() => {
   $('#bankInfo').textContent = `${Object.keys(UNITS).length} 顆星球・${Object.keys(LABS).length} 個互動實驗室・${Object.keys(QS).length} 題・最後更新 ${META.updated || ''}`;
   P(); save(); route();
+  if (!DB.seen) onboard();
 }).catch(err => { app.innerHTML = '<p class="loading">載入失敗，請重新整理頁面。<br><span class="sm">' + esc(err.message) + '</span></p>'; });
 })();

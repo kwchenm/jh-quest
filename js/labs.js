@@ -709,4 +709,5 @@ L.ch8a1 = {
     M('律詩中間有兩聯必須「對仗」。把那四句選起來', s => { s.sel = {}; }, s => sel(s) === '2,3,4,5', '第 3、4 句（**頷聯**）和第 5、6 句（**頸聯**）必須對仗，例如「感時」對「恨別」、「花濺淚」對「鳥驚心」。', s => { s.sel = { 2: true, 3: true, 4: true, 5: true }; }, '不是頭兩句，也不是最後兩句。')
   ]
 };
+G.LABKIT = { svg, T, rc, M, R, rep, machine };      // 給第二批實驗室（labs2.js）共用
 })(typeof globalThis !== 'undefined' ? globalThis : window);
