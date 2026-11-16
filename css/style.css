@@ -291,6 +291,24 @@ h1{font-size:1.5rem; margin:.2em 0 .4em} h2{font-size:1.15rem; margin:1.2em 0 .5
 .exp{margin-top:12px; padding:12px 14px; border-radius:14px; background:#0d2a4a; border:1px solid #1e4b80; white-space:pre-wrap}
 .exp.good{background:#12351f; border-color:#1f6b3a; white-space:normal}
 .exp b.ok{color:var(--ok)} .exp b.no{color:var(--bad)} .exp b{color:var(--acc)}
+/* 作答：先選、再按「確定作答」；公布後每個選項都寫出原因 */
+.opt{position:relative; flex-wrap:wrap}
+.opt .ot{flex:1 1 0; min-width:0}
+.opt.sel{border-color:var(--acc); background:#3a2d06; box-shadow:0 0 0 3px #fbbf2440}
+.opt:disabled{cursor:default}
+.opt.dim{opacity:.85}
+.opt .why{flex:1 1 100%; margin-left:36px; font-size:.86rem; line-height:1.5; font-weight:400; color:#cbd5e1}
+.opt.right .why{color:#bbf7d0; font-weight:600} .opt.wrong .why{color:#fecaca; font-weight:600}
+.opt.mine::after{content:'你的答案'; position:absolute; top:-10px; right:12px; background:var(--acc); color:#1f1500; font-size:.72rem; font-weight:800; padding:1px 8px; border-radius:99px}
+.cfrow{margin-top:12px}
+.exp.err{background:#3a1420; border-color:#7f1d1d; white-space:normal}
+.exp .sm{font-size:.88rem}
+.tiles.hold,.orbs.hold{pointer-events:none} .tiles.hold .tile2,.orbs.hold .orb2{opacity:.6}
+.why2 summary{cursor:pointer; color:var(--blue)} .why2 ul{margin:6px 0 0; padding-left:18px}
+.dmid{grid-column:1/-1; order:3; display:flex; justify-content:center} .dmid[hidden]{display:none}
+.dside.out .opt{opacity:.5} .dside.won{box-shadow:0 0 0 3px var(--ok)}
+.dmsg{font-size:.9rem; line-height:1.5} .dmsg:empty{display:none}
+@media (max-width:640px){ .dmid{order:0} .opt .why{margin-left:0} }
 .result{text-align:center; padding:26px 16px; display:grid; justify-items:center; gap:2px}
 .result .big{font-size:2.8rem; letter-spacing:6px; color:var(--acc)}
 .result .say{text-align:left}

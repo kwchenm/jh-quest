@@ -1,5 +1,6 @@
 // 題庫與課程格式檢查：node scripts/validate.mjs
-// 題庫 data/<科目>.json 每題格式：["題目", "正確答案", "錯誤1", "錯誤2", "錯誤3", "解析"]
+// 題庫 data/<科目>.json 每題格式：["題目", "正確答案", "錯誤1", "錯誤2", "錯誤3", "正解說明", "錯1原因", "錯2原因", "錯3原因"]
+// 課程卡的 chk 格式：["題目", "正解", "錯1", "錯2", "正解說明", "錯1原因", "錯2原因"]
 // 課程 data/lessons/<科目>.json：每個單元一份 {ic, hook, cards[], game}
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -13,11 +14,13 @@ const distinct = arr => new Set(arr.map(x => x.trim())).size === arr.length;
 const boldOK = s => (s.match(/\*\*/g) || []).length % 2 === 0;
 
 export function checkQuestion(q) {
-  if (!Array.isArray(q) || q.length !== 6) return '必須是 6 個欄位的陣列';
+  if (!Array.isArray(q) || q.length !== 9) return '必須是 9 個欄位的陣列（題目、4 個選項、正解說明、3 個錯誤原因）';
   if (q.some(x => typeof x !== 'string')) return '每個欄位都必須是字串';
   if (q.slice(0, 5).some(x => !x.trim())) return '題目與選項不可空白';
+  if (q.slice(5).some(x => !x.trim())) return '正解說明與每個錯誤選項的原因都不可空白';
   if (!distinct(q.slice(1, 5))) return '四個選項不可重複';
   if (q[0].length > 300 || q.slice(1, 5).some(x => x.length > 120)) return '題目或選項過長';
+  if (q.slice(5).some(x => x.length > 160)) return '說明過長';
   return null;
 }
 
@@ -34,8 +37,8 @@ export function checkLesson(L) {
       if (!Array.isArray(c.flip) || c.flip.length < 2 || c.flip.length > 8 || c.flip.some(f => !Array.isArray(f) || f.length !== 2 || !isStr(f[0]) || !isStr(f[1]))) errs.push(`${p}: flip 格式有誤`);
     }
     if (c.chk !== undefined) {
-      if (!Array.isArray(c.chk) || c.chk.length !== 4 || c.chk.some(x => !isStr(x))) errs.push(`${p}: chk 必須是 [題目, 正解, 錯1, 錯2]`);
-      else if (!distinct(c.chk.slice(1))) errs.push(`${p}: chk 選項重複`);
+      if (!Array.isArray(c.chk) || c.chk.length !== 7 || c.chk.some(x => !isStr(x))) errs.push(`${p}: chk 必須是 [題目, 正解, 錯1, 錯2, 正解說明, 錯1原因, 錯2原因]`);
+      else if (!distinct(c.chk.slice(1, 4))) errs.push(`${p}: chk 選項重複`);
     }
     if (c.chk === undefined && c.flip === undefined) errs.push(`${p}: 至少要有 chk（快問快答）或 flip`);
   });

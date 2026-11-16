@@ -1,98 +1,98 @@
 {"id":"english","units":[
 {"id":"en7a1","g":7,"s":"上","t":"be 動詞、代名詞與名詞","k":"am / is / are、人稱代名詞、所有格、名詞複數","q":[
-["My sister and I ____ students.","are","is","am","be","主詞 My sister and I 是複數，be 動詞用 are。"],
-["This is my brother. ____ name is Tom.","His","He","Him","He's","名詞 name 前面要用所有格 His。"],
-["There are three ____ on the desk.","boxes","box","boxs","boxies","字尾是 x 的名詞，複數加 es。"],
-["A: Is that your book?  B: Yes, ____.","it is","it isn't","that's","I am","簡答時用代名詞 it 代替 that，肯定簡答不可縮寫。"],
-["____ is your father?  He is a doctor.","What","Who","How","Where","詢問職業用 What。問「是誰」才用 Who。"],
-["Look at ____ dogs over there. They are cute.","those","that","this","it","dogs 是複數，且在遠處（over there），用 those。"]
+["My sister and I ____ students.", "are", "is", "am", "be", "主詞 My sister and I 是複數，be 動詞用 are。", "is 用在單數主詞；「我姊姊和我」是兩個人。", "am 只能配 I；這裡主詞是「我姊姊和我」兩個人。", "be 是原形，句子裡要用變化後的 are。"],
+["This is my brother. ____ name is Tom.", "His", "He", "Him", "He's", "名詞 name 前面要用所有格 His。", "He 是主格，不能放在名詞 name 前面。", "Him 是受格，要放在動詞或介系詞後面。", "He's 是 He is，變成「他是名字」，不通。"],
+["There are three ____ on the desk.", "boxes", "box", "boxs", "boxies", "字尾是 x 的名詞，複數加 es。", "three 後面要用複數，不能用單數 box。", "字尾是 x 要加 es，不能只加 s。", "只有子音 + y 結尾才改 ies；box 沒有 y。"],
+["A: Is that your book?  B: Yes, ____.", "it is", "it isn't", "that's", "I am", "簡答時用代名詞 it 代替 that，肯定簡答不可縮寫。", "回答 Yes，後面要接肯定，不能接否定 it isn't。", "肯定簡答不能縮寫，而且要用 it 代替 that。", "問的是書，不是問你，所以不能答 I am。"],
+["____ is your father?  He is a doctor.", "What", "Who", "How", "Where", "詢問職業用 What。問「是誰」才用 Who。", "Who 問「是誰」，回答會是名字或身分關係。", "How 問狀況或方式，例如 He is fine.", "Where 問地點，例如 He is at home."],
+["Look at ____ dogs over there. They are cute.", "those", "that", "this", "it", "dogs 是複數，且在遠處（over there），用 those。", "that 是單數，dogs 是複數。", "this 是單數又指近處，dogs 是複數而且在遠處。", "it 是代名詞，不能放在名詞 dogs 前面。"]
 ]},
 {"id":"en7a2","g":7,"s":"上","t":"現在進行式與 There is / are","k":"be + V-ing、祈使句、地方介系詞","q":[
-["Look! The baby ____ now.","is sleeping","sleeps","sleep","are sleeping","有 Look! 和 now，表示正在進行，用 is + V-ing。"],
-["They are ____ in the pool.","swimming","swiming","swim","swims","swim 是短母音加單子音結尾，要重複字尾 m 再加 ing。"],
-["There ____ a pen and two books in my bag.","is","are","am","be","There is / are 的 be 動詞由最靠近的名詞（a pen）決定。"],
-["____ open the window. It's cold outside.","Don't","Not","No","Doesn't","否定祈使句用 Don't + 原形動詞。"],
-["The cat is ____ the chair and the table.","between","in","on","under","between A and B 表示「在 A 和 B 之間」。"],
-["A: What are you doing?  B: I ____ a letter.","am writing","writing","write","am write","現在進行式：am + writing（去 e 加 ing）。"]
+["Look! The baby ____ now.", "is sleeping", "sleeps", "sleep", "are sleeping", "有 Look! 和 now，表示正在進行，用 is + V-ing。", "sleeps 是現在簡單式，表示習慣；Look! 和 now 表示正在進行。", "sleep 是原形；主詞 the baby 是單數，而且現在正在進行。", "are 配複數主詞；the baby 是單數，要用 is。"],
+["They are ____ in the pool.", "swimming", "swiming", "swim", "swims", "swim 是短母音加單子音結尾，要重複字尾 m 再加 ing。", "swim 是短母音加一個子音結尾，要重複 m：swimming。", "are 後面要接 V-ing 表示進行，不能接原形。", "are 後面要接 V-ing，swims 是現在簡單式。"],
+["There ____ a pen and two books in my bag.", "is", "are", "am", "be", "There is / are 的 be 動詞由最靠近的名詞（a pen）決定。", "be 動詞看最靠近的名詞 a pen（單數），所以不用 are。", "am 只能配 I。", "be 是原形，句子裡要用變化後的 is。"],
+["____ open the window. It's cold outside.", "Don't", "Not", "No", "Doesn't", "否定祈使句用 Don't + 原形動詞。", "否定祈使句要用 Don't，不能只用 Not。", "No 後面不能接原形動詞 open；否定祈使句用 Don't。", "祈使句是對「你」說的，不用 Doesn't。"],
+["The cat is ____ the chair and the table.", "between", "in", "on", "under", "between A and B 表示「在 A 和 B 之間」。", "in 是「在……裡面」，不能表示在兩樣東西中間。", "on 是「在……上面」，不能表示在兩樣東西中間。", "under 是「在……下面」，不能表示在兩樣東西中間。"],
+["A: What are you doing?  B: I ____ a letter.", "am writing", "writing", "write", "am write", "現在進行式：am + writing（去 e 加 ing）。", "少了 be 動詞 am，進行式是 be + V-ing。", "對方問「正在做什麼」，要用現在進行式。", "am 後面要接 V-ing，不能接原形 write。"]
 ]},
 {"id":"en7b1","g":7,"s":"下","t":"現在簡單式與頻率副詞","k":"第三人稱單數、助動詞 do / does、頻率副詞","q":[
-["My father ____ to work by bus every day.","goes","go","going","is go","主詞第三人稱單數，現在簡單式動詞加 es。"],
-["____ your sister like music?","Does","Do","Is","Are","主詞 your sister 是第三人稱單數，疑問句用 Does。"],
-["She doesn't ____ breakfast at home.","have","has","having","had","doesn't 後面接原形動詞。"],
-["Tom is ____ late for school. He is a good student.","never","always","usually","often","依句意，好學生「從不」遲到。"],
-["A: ____ do you go to the library?  B: Twice a week.","How often","How many","How long","How much","回答是頻率（一週兩次），用 How often 詢問。"],
-["Amy ____ English every night.","studies","studys","study","studying","子音 + y 結尾的動詞，去 y 加 ies。"]
+["My father ____ to work by bus every day.", "goes", "go", "going", "is go", "主詞第三人稱單數，現在簡單式動詞加 es。", "主詞 My father 是第三人稱單數，動詞要加 es，不能用原形。", "句子裡沒有 be 動詞，不能只用 going。", "is 後面不能直接接原形 go。"],
+["____ your sister like music?", "Does", "Do", "Is", "Are", "主詞 your sister 是第三人稱單數，疑問句用 Does。", "Do 配 I、you 或複數；your sister 是第三人稱單數。", "後面有一般動詞 like，問句要用助動詞，不用 be 動詞。", "後面有一般動詞 like，而且 Are 配複數主詞。"],
+["She doesn't ____ breakfast at home.", "have", "has", "having", "had", "doesn't 後面接原形動詞。", "doesn't 已經表示第三人稱單數，後面動詞要還原成原形。", "doesn't 後面要接原形，不能接 V-ing。", "doesn't 是現在式，後面接原形，不能接過去式。"],
+["Tom is ____ late for school. He is a good student.", "never", "always", "usually", "often", "依句意，好學生「從不」遲到。", "「總是遲到」和「好學生」矛盾。", "「通常遲到」和「好學生」矛盾。", "「常常遲到」和「好學生」矛盾。"],
+["A: ____ do you go to the library?  B: Twice a week.", "How often", "How many", "How long", "How much", "回答是頻率（一週兩次），用 How often 詢問。", "How many 問可數名詞的數量，例如幾本書。", "How long 問時間長度，例如待多久。", "How much 問價格或不可數名詞的量。"],
+["Amy ____ English every night.", "studies", "studys", "study", "studying", "子音 + y 結尾的動詞，去 y 加 ies。", "子音 + y 結尾要去 y 加 ies，不是直接加 s。", "主詞 Amy 是第三人稱單數，動詞要變化。", "句子裡沒有 be 動詞，不能只用 studying。"]
 ]},
 {"id":"en7b2","g":7,"s":"下","t":"過去簡單式","k":"was / were、規則與不規則動詞、did","q":[
-["I ____ at home yesterday.","was","am","were","is","yesterday 是過去時間，主詞 I 用 was。"],
-["They ____ a movie last night.","watched","watch","watches","watching","last night 為過去時間，規則動詞加 ed。"],
-["Did you ____ your homework?","finish","finished","finishes","finishing","助動詞 Did 後面接原形動詞。"],
-["She ____ to Japan two years ago.","went","goes","go","gone","go 的過去式是 went。"],
-["We didn't ____ any milk this morning.","buy","bought","buys","buying","didn't 後面接原形動詞。"],
-["He ____ a letter to his grandmother last week.","wrote","writes","written","write","write 的過去式是 wrote，過去分詞是 written。"]
+["I ____ at home yesterday.", "was", "am", "were", "is", "yesterday 是過去時間，主詞 I 用 was。", "am 是現在式，yesterday 是過去。", "were 配 you 或複數；主詞 I 的過去式用 was。", "is 是現在式，而且不能配 I。"],
+["They ____ a movie last night.", "watched", "watch", "watches", "watching", "last night 為過去時間，規則動詞加 ed。", "last night 是過去，要用過去式。", "watches 是第三人稱單數現在式；主詞是 They，而且是過去。", "沒有 be 動詞，不能只用 watching。"],
+["Did you ____ your homework?", "finish", "finished", "finishes", "finishing", "助動詞 Did 後面接原形動詞。", "Did 已經表示過去了，後面動詞要用原形。", "Did 後面要接原形，不能加 es。", "Did 後面要接原形，不能接 V-ing。"],
+["She ____ to Japan two years ago.", "went", "goes", "go", "gone", "go 的過去式是 went。", "two years ago 是過去，不能用現在式 goes。", "two years ago 是過去，要用過去式 went。", "gone 是過去分詞，要搭配 have / has。"],
+["We didn't ____ any milk this morning.", "buy", "bought", "buys", "buying", "didn't 後面接原形動詞。", "didn't 已經表示過去，後面要用原形。", "didn't 後面要接原形，不能加 s。", "didn't 後面要接原形，不能接 V-ing。"],
+["He ____ a letter to his grandmother last week.", "wrote", "writes", "written", "write", "write 的過去式是 wrote，過去分詞是 written。", "last week 是過去，不能用現在式 writes。", "written 是過去分詞，要搭配 have / has。", "last week 是過去，要用過去式 wrote。"]
 ]},
 {"id":"en8a1","g":8,"s":"上","t":"未來式與比較級、最高級","k":"will / be going to、形容詞比較","q":[
-["We ____ visit our grandparents next Sunday.","will","are","did","were","next Sunday 是未來時間，用 will + 原形動詞。"],
-["She is going to ____ a new bike tomorrow.","buy","buys","buying","bought","be going to 後面接原形動詞。"],
-["An elephant is ____ than a horse.","bigger","big","biggest","more big","比較級；big 要重複字尾 g 再加 er。"],
-["Mary is the ____ girl in her class.","tallest","tall","taller","most tall","有 the 及範圍 in her class，用最高級。"],
-["This book is ____ than that one.","more interesting","interestinger","most interesting","interesting","多音節形容詞的比較級用 more + 形容詞。"],
-["My English is good, but his is ____.","better","gooder","best","more good","good 的比較級是 better，最高級是 best。"]
+["We ____ visit our grandparents next Sunday.", "will", "are", "did", "were", "next Sunday 是未來時間，用 will + 原形動詞。", "are 後面不能直接接原形 visit。", "did 是過去，next Sunday 是未來。", "were 是過去式，而且後面不能直接接原形。"],
+["She is going to ____ a new bike tomorrow.", "buy", "buys", "buying", "bought", "be going to 後面接原形動詞。", "be going to 後面接原形，不能加 s。", "be going to 後面接原形，不能接 V-ing。", "tomorrow 是未來，而且 to 後面要用原形。"],
+["An elephant is ____ than a horse.", "bigger", "big", "biggest", "more big", "比較級；big 要重複字尾 g 再加 er。", "有 than，要用比較級，不能用原級。", "biggest 是最高級，要搭配 the；有 than 要用比較級。", "big 是單音節的短字，比較級是 bigger，不加 more。"],
+["Mary is the ____ girl in her class.", "tallest", "tall", "taller", "most tall", "有 the 及範圍 in her class，用最高級。", "有 the 和範圍 in her class，要用最高級。", "taller 是比較級，要搭配 than。", "tall 是單音節字，最高級是 tallest，不加 most。"],
+["This book is ____ than that one.", "more interesting", "interestinger", "most interesting", "interesting", "多音節形容詞的比較級用 more + 形容詞。", "多音節的字不能加 er，要用 more。", "most 是最高級；有 than 要用比較級。", "有 than，要用比較級，不能用原級。"],
+["My English is good, but his is ____.", "better", "gooder", "best", "more good", "good 的比較級是 better，最高級是 best。", "good 是不規則變化，沒有 gooder。", "best 是最高級；這裡是兩個人比較。", "good 的比較級是 better，不用 more good。"]
 ]},
 {"id":"en8a2","g":8,"s":"上","t":"動名詞、不定詞與連接詞","k":"enjoy V-ing、want to V、because / so / if / when","q":[
-["I enjoy ____ basketball after school.","playing","to play","play","played","enjoy 後面接動名詞（V-ing）。"],
-["He wants ____ a doctor in the future.","to be","being","be","is","want 後面接不定詞（to + 原形動詞）。"],
-["____ it rains tomorrow, we will stay home.","If","Because","So","But","if 表示條件；條件句用現在式代替未來式。"],
-["She was sick, ____ she didn't go to school.","so","because","if","but","前因後果用 so（所以）。"],
-["____ English well is not easy.","Speaking","Speak","Speaks","Spoke","動名詞可當主詞，視為單數。"],
-["Thank you for ____ me.","helping","help","to help","helped","介系詞 for 後面接動名詞。"]
+["I enjoy ____ basketball after school.", "playing", "to play", "play", "played", "enjoy 後面接動名詞（V-ing）。", "enjoy 後面只能接 V-ing，不能接不定詞。", "enjoy 是動詞，後面不能直接再接原形動詞。", "enjoy 後面要接 V-ing，不能接過去式。"],
+["He wants ____ a doctor in the future.", "to be", "being", "be", "is", "want 後面接不定詞（to + 原形動詞）。", "want 後面接不定詞 to V，不接 V-ing。", "want 後面要先加 to，不能直接接原形。", "一句話裡不能有兩個主要動詞 wants 和 is。"],
+["____ it rains tomorrow, we will stay home.", "If", "Because", "So", "But", "if 表示條件；條件句用現在式代替未來式。", "明天還沒發生，不是原因，是條件。", "so 表示結果，要放在後半句前面。", "but 表示轉折，下雨和待在家沒有相反的意思。"],
+["She was sick, ____ she didn't go to school.", "so", "because", "if", "but", "前因後果用 so（所以）。", "because 後面要接原因；「沒去上學」是結果。", "if 表示假設，但她已經生病了。", "but 表示轉折；生病和沒上學是因果，不是相反。"],
+["____ English well is not easy.", "Speaking", "Speak", "Speaks", "Spoke", "動名詞可當主詞，視為單數。", "原形動詞不能直接當主詞。", "speaks 是動詞，不能當主詞。", "spoke 是過去式動詞，不能當主詞。"],
+["Thank you for ____ me.", "helping", "help", "to help", "helped", "介系詞 for 後面接動名詞。", "介系詞 for 後面不能接原形動詞。", "介系詞 for 後面不能再接 to V。", "介系詞 for 後面不能接過去式。"]
 ]},
 {"id":"en8b1","g":8,"s":"下","t":"過去進行式與特殊動詞","k":"was / were V-ing、授與動詞、使役動詞、感官動詞","q":[
-["I ____ TV when my mother came home.","was watching","watched","am watching","watch","過去某個時間點正在進行的動作，用過去進行式。"],
-["While they ____ dinner, the phone rang.","were having","had","are having","have","while 引導持續進行的動作，用過去進行式。"],
-["My mother made me ____ my room.","clean","to clean","cleaning","cleaned","使役動詞 make 後面接原形動詞。"],
-["I saw a boy ____ across the street.","run","to run","ran","runs","感官動詞 see 後面接原形動詞或 V-ing。"],
-["He gave ____.","me a book","a book me","a book for me","to me a book","授與動詞句型：give + 人 + 物，或 give + 物 + to + 人。"],
-["My parents let me ____ to the party.","go","to go","going","went","使役動詞 let 後面接原形動詞。"]
+["I ____ TV when my mother came home.", "was watching", "watched", "am watching", "watch", "過去某個時間點正在進行的動作，用過去進行式。", "watched 只表示看了；這裡強調媽媽回來時「正在看」。", "am watching 是現在進行式，但 came 表示過去。", "watch 是現在式，但 came 表示過去。"],
+["While they ____ dinner, the phone rang.", "were having", "had", "are having", "have", "while 引導持續進行的動作，用過去進行式。", "had 只表示吃了；while 強調那時「正在吃」。", "are having 是現在進行式，但 rang 表示過去。", "have 是現在式，但 rang 表示過去。"],
+["My mother made me ____ my room.", "clean", "to clean", "cleaning", "cleaned", "使役動詞 make 後面接原形動詞。", "make 是使役動詞，後面接原形，不加 to。", "make 後面接原形，不接 V-ing。", "make 後面接原形，不接過去式。"],
+["I saw a boy ____ across the street.", "run", "to run", "ran", "runs", "感官動詞 see 後面接原形動詞或 V-ing。", "感官動詞 see 後面接原形或 V-ing，不加 to。", "see 後面的受詞要接原形，不能接過去式。", "see 後面的受詞要接原形，不能加 s。"],
+["He gave ____.", "me a book", "a book me", "a book for me", "to me a book", "授與動詞句型：give + 人 + 物，或 give + 物 + to + 人。", "物放前面時，人前面要加 to：a book to me。", "give 搭配的介系詞是 to，不是 for。", "to me 要放在物的後面：gave a book to me。"],
+["My parents let me ____ to the party.", "go", "to go", "going", "went", "使役動詞 let 後面接原形動詞。", "let 是使役動詞，後面接原形，不加 to。", "let 後面接原形，不接 V-ing。", "let 後面接原形，不接過去式。"]
 ]},
 {"id":"en8b2","g":8,"s":"下","t":"不定代名詞、反身代名詞與附加問句","k":"one / the other、myself、附加問句、so / too","q":[
-["I have two pens. One is red, and ____ is blue.","the other","another","other","others","兩者中的「另一個」用 the other。"],
-["She looked at ____ in the mirror.","herself","her","hers","she","主詞和受詞是同一人，用反身代名詞。"],
-["You are a student, ____?","aren't you","are you","don't you","do you","前面是肯定句，附加問句用否定；be 動詞對應 aren't。"],
-["Tom doesn't like fish, ____?","does he","doesn't he","is he","did he","前面是否定句，附加問句用肯定。"],
-["The box is ____ heavy that I can't carry it.","so","too","very","such","so + 形容詞 + that 子句，表示「如此……以致於」。"],
-["He is ____ young to drive a car.","too","so","such","enough","too + 形容詞 + to V，表示「太……而不能」。"]
+["I have two pens. One is red, and ____ is blue.", "the other", "another", "other", "others", "兩者中的「另一個」用 the other。", "another 是三個以上中的「另一個」；這裡只有兩支。", "other 要放在名詞前面，例如 other pens。", "others 是複數，指「其他一些」，這裡只剩一支。"],
+["She looked at ____ in the mirror.", "herself", "her", "hers", "she", "主詞和受詞是同一人，用反身代名詞。", "her 是指別的女生；照鏡子看的是自己。", "hers 是「她的東西」，不是她本人。", "she 是主格，不能放在介系詞 at 後面。"],
+["You are a student, ____?", "aren't you", "are you", "don't you", "do you", "前面是肯定句，附加問句用否定；be 動詞對應 aren't。", "前面是肯定句，附加問句要用否定。", "前面是 be 動詞 are，附加問句不能用 don't。", "前面是 be 動詞，而且是肯定句，要用 aren't。"],
+["Tom doesn't like fish, ____?", "does he", "doesn't he", "is he", "did he", "前面是否定句，附加問句用肯定。", "前面是否定句，附加問句要用肯定。", "前面用的是助動詞 does，不是 be 動詞。", "前面是現在式 doesn't，不能用過去式 did。"],
+["The box is ____ heavy that I can't carry it.", "so", "too", "very", "such", "so + 形容詞 + that 子句，表示「如此……以致於」。", "too 要搭配 to V，不搭配 that。", "very 不能和 that 子句連用。", "such 後面要接名詞，例如 such a heavy box。"],
+["He is ____ young to drive a car.", "too", "so", "such", "enough", "too + 形容詞 + to V，表示「太……而不能」。", "so 要搭配 that 子句，不搭配 to V。", "such 後面要接名詞，例如 such a young boy。", "enough 要放在形容詞後面（old enough），而且意思相反。"]
 ]},
 {"id":"en9a1","g":9,"s":"上","t":"現在完成式","k":"have / has + p.p.、for / since、already / yet","q":[
-["I ____ in Taipei for ten years.","have lived","live","am living","lived","for + 一段時間，表示從過去持續到現在，用現在完成式。"],
-["She has studied English ____ 2020.","since","for","in","at","since + 過去時間點；for + 一段時間。"],
-["Have you ____ been to Japan?","ever","never","yet","since","詢問「曾經」的經驗用 ever。"],
-["He has ____ finished his homework. He can play now.","already","yet","ever","since","already 用於肯定句，表示「已經」；yet 用於否定句與疑問句。"],
-["Tom ____ to Kaohsiung. He is not here now.","has gone","has been","goes","was","has gone to 表示「已經去了（人不在這裡）」；has been to 表示「去過」。"],
-["I haven't seen him ____ last Monday.","since","for","from","in","last Monday 是過去的時間點，用 since。"]
+["I ____ in Taipei for ten years.", "have lived", "live", "am living", "lived", "for + 一段時間，表示從過去持續到現在，用現在完成式。", "live 是現在簡單式，不能表示「已經住了十年」。", "進行式不能搭配 for ten years 表示從過去一直到現在。", "lived 是過去式，表示以前住過、現在不住了。"],
+["She has studied English ____ 2020.", "since", "for", "in", "at", "since + 過去時間點；for + 一段時間。", "for 後面接一段時間，例如 for six years。", "in 2020 只說那一年，不能表示「從那時到現在」。", "at 用在時刻，例如 at seven o'clock。"],
+["Have you ____ been to Japan?", "ever", "never", "yet", "since", "詢問「曾經」的經驗用 ever。", "never 是「從來沒有」；問別人的經驗要用 ever。", "yet 放在句尾，表示「已經……了嗎」。", "since 後面要接時間點，不能放在這裡。"],
+["He has ____ finished his homework. He can play now.", "already", "yet", "ever", "since", "already 用於肯定句，表示「已經」；yet 用於否定句與疑問句。", "yet 用在否定句和問句，而且放在句尾。", "ever 用在問句，問「曾經」。", "since 後面要接時間點。"],
+["Tom ____ to Kaohsiung. He is not here now.", "has gone", "has been", "goes", "was", "has gone to 表示「已經去了（人不在這裡）」；has been to 表示「去過」。", "has been to 是「去過」（已經回來）；但他現在不在這裡。", "goes 表示習慣常去，不能說明他現在不在這裡。", "was 是 be 動詞，不能表示「去」這個動作。"],
+["I haven't seen him ____ last Monday.", "since", "for", "from", "in", "last Monday 是過去的時間點，用 since。", "for 後面接一段時間，last Monday 是時間點。", "from 常要搭配 to，不能表示「從那時到現在」。", "last 前面不加 in，而且 in 不能表示「從那時到現在」。"]
 ]},
 {"id":"en9a2","g":9,"s":"上","t":"被動語態與分詞形容詞","k":"be + p.p.、by、-ing / -ed 形容詞","q":[
-["English ____ in many countries.","is spoken","speaks","is speaking","spoke","英語「被說」，用被動語態 be + 過去分詞。"],
-["The window ____ by Tom yesterday.","was broken","broke","is broken","breaks","yesterday 為過去時間，用過去式被動 was + p.p.。"],
-["The movie is very ____.","interesting","interested","interest","interests","修飾事物用 -ing（令人感到……的）。"],
-["I am ____ in science.","interested","interesting","interest","interests","人「感到」有興趣用 -ed；be interested in 為固定用法。"],
-["This bridge ____ in 1990.","was built","built","is building","builds","橋是「被建造」，且為過去時間。"],
-["The news made us ____.","excited","exciting","excite","excitedly","人感到興奮用 excited。"]
+["English ____ in many countries.", "is spoken", "speaks", "is speaking", "spoke", "英語「被說」，用被動語態 be + 過去分詞。", "英語不會自己說話，要用被動 is spoken。", "is speaking 是「正在說」，英語不會自己說話。", "spoke 是主動的過去式，英語是「被說」。"],
+["The window ____ by Tom yesterday.", "was broken", "broke", "is broken", "breaks", "yesterday 為過去時間，用過去式被動 was + p.p.。", "窗戶是被打破的，而且有 by Tom，要用被動。", "yesterday 是過去，不能用現在式 is。", "窗戶是被打破的，而且 yesterday 是過去。"],
+["The movie is very ____.", "interesting", "interested", "interest", "interests", "修飾事物用 -ing（令人感到……的）。", "-ed 是人「感到」有興趣；電影是讓人覺得有趣的東西。", "interest 是名詞或動詞，不能放在 very 後面形容。", "interests 是動詞或名詞複數，不能放在 very 後面形容。"],
+["I am ____ in science.", "interested", "interesting", "interest", "interests", "人「感到」有興趣用 -ed；be interested in 為固定用法。", "I am interesting 是「我很有趣」，不是對科學有興趣。", "be 動詞後面要用形容詞 interested，不是名詞或動詞。", "be 動詞後面要用形容詞 interested，不能用 interests。"],
+["This bridge ____ in 1990.", "was built", "built", "is building", "builds", "橋是「被建造」，且為過去時間。", "橋不會自己蓋，要用被動 was built。", "is building 是「正在蓋」，而且是主動、現在式。", "builds 是主動現在式；橋是被蓋的，而且是 1990 年。"],
+["The news made us ____.", "excited", "exciting", "excite", "excitedly", "人感到興奮用 excited。", "exciting 是事物「令人興奮」；這裡是我們感到興奮。", "excite 是動詞，這裡要用形容詞描述我們的感受。", "excitedly 是副詞，不能放在受詞 us 後面當補語。"]
 ]},
 {"id":"en9b1","g":9,"s":"下","t":"關係子句與名詞子句","k":"who / which / that、間接問句、whether","q":[
-["The girl ____ is singing is my sister.","who","which","whose","whom","先行詞是人，且在子句中當主詞，用 who（或 that）。"],
-["This is the book ____ I bought yesterday.","which","who","where","what","先行詞是物，用 which（或 that）。"],
-["I don't know where ____.","he lives","does he live","he live","lives he","間接問句要用「疑問詞 + 主詞 + 動詞」的直述句語序。"],
-["Can you tell me what time ____?","it is","is it","it be","does it","間接問句語序：what time + 主詞 + 動詞。"],
-["I'm not sure ____ he will come or not.","whether","what","that","which","whether ... or not 表示「是否」。"],
-["The boy and his dog ____ are running in the park look happy.","that","who","which","whom","先行詞同時包含人和動物時，關係代名詞用 that。"]
+["The girl ____ is singing is my sister.", "who", "which", "whose", "whom", "先行詞是人，且在子句中當主詞，用 who（或 that）。", "which 用在物，the girl 是人。", "whose 是「……的」，後面要接名詞。", "whom 是受格，這裡在子句中當主詞。"],
+["This is the book ____ I bought yesterday.", "which", "who", "where", "what", "先行詞是物，用 which（或 that）。", "who 用在人，book 是物。", "where 用在地點，book 不是地點。", "what 前面不能有先行詞 the book。"],
+["I don't know where ____.", "he lives", "does he live", "he live", "lives he", "間接問句要用「疑問詞 + 主詞 + 動詞」的直述句語序。", "間接問句不用 does，要用直述句的語序。", "主詞 he 是第三人稱單數，live 要加 s。", "動詞不能放在主詞前面，要用 he lives。"],
+["Can you tell me what time ____?", "it is", "is it", "it be", "does it", "間接問句語序：what time + 主詞 + 動詞。", "間接問句要用直述句的語序：it is，不能倒裝。", "be 要變化成 is，不能用原形。", "間接問句不用 does，而且問時間要用 be 動詞。"],
+["I'm not sure ____ he will come or not.", "whether", "what", "that", "which", "whether ... or not 表示「是否」。", "what 是「什麼」，句子後面已經不缺東西。", "that 不能和 or not 連用表示「是否」。", "which 是「哪一個」，這裡沒有選項讓人選。"],
+["The boy and his dog ____ are running in the park look happy.", "that", "who", "which", "whom", "先行詞同時包含人和動物時，關係代名詞用 that。", "who 只能指人，但先行詞還有狗。", "which 只能指物或動物，但先行詞還有男孩。", "whom 是受格，而且只指人。"]
 ]},
 {"id":"en9b2","g":9,"s":"下","t":"會考綜合文法","k":"although、so that、動詞時態綜合、片語","q":[
-["____ he was tired, he kept working.","Although","Because","If","So","although 表示「雖然」，不可與 but 連用。"],
-["He got up early ____ he could catch the first bus.","so that","because of","although","until","so that 表示目的「以便」。"],
-["I look forward to ____ you soon.","seeing","see","saw","seen","look forward to 的 to 是介系詞，後面接 V-ing。"],
-["It takes me thirty minutes ____ to school.","to walk","walking","walk","walked","It takes + 人 + 時間 + to V。"],
-["She spent two hours ____ her homework.","doing","to do","do","did","人 + spend + 時間 + V-ing。"],
-["Neither Tom nor his brothers ____ at home now.","are","is","am","be","neither A nor B 的動詞與最靠近的主詞（his brothers）一致。"]
+["____ he was tired, he kept working.", "Although", "Because", "If", "So", "although 表示「雖然」，不可與 but 連用。", "累和繼續工作是相反的，不是因果。", "if 是假設，但他已經累了。", "so 表示結果，不能放在原因前面開頭。"],
+["He got up early ____ he could catch the first bus.", "so that", "because of", "although", "until", "so that 表示目的「以便」。", "because of 後面接名詞，不能接句子。", "although 是「雖然」，早起和趕上公車不是相反。", "until 是「直到」，意思不通。"],
+["I look forward to ____ you soon.", "seeing", "see", "saw", "seen", "look forward to 的 to 是介系詞，後面接 V-ing。", "這裡的 to 是介系詞，後面不能接原形。", "介系詞 to 後面不能接過去式。", "介系詞 to 後面不能接過去分詞。"],
+["It takes me thirty minutes ____ to school.", "to walk", "walking", "walk", "walked", "It takes + 人 + 時間 + to V。", "It takes 的句型要接 to V；V-ing 是 spend 的句型。", "要用不定詞 to walk，不能只用原形。", "要用不定詞 to walk，不能用過去式。"],
+["She spent two hours ____ her homework.", "doing", "to do", "do", "did", "人 + spend + 時間 + V-ing。", "spend + 時間後面接 V-ing；to V 是 It takes 的句型。", "spend + 時間後面接 V-ing，不接原形。", "spend + 時間後面接 V-ing，不接過去式。"],
+["Neither Tom nor his brothers ____ at home now.", "are", "is", "am", "be", "neither A nor B 的動詞與最靠近的主詞（his brothers）一致。", "動詞看最靠近的 his brothers（複數），不用 is。", "am 只能配 I。", "be 是原形，句子裡要用變化後的 are。"]
 ]}
 ]}
