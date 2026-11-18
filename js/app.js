@@ -37,6 +37,10 @@ async function loadBank() {
         const q = {id: u.id + ':' + hash(raw[0]), uid: u.id, sid: s.id, q: raw[0], right: raw[1], wrongs: raw.slice(2, 5), exp: raw[5] || '', whys: raw.slice(6, 9)};
         QS[q.id] = q; unit.qs.push(q);
       });
+      unit.cq = ((LESSONS[u.id] || {}).cards || []).filter(c => c.chk)                   // 知識碎片的快問也算進題庫（和題庫重複的不算）
+        .map(c => ({...chkQ(c), id: u.id + '#' + hash(c.chk[0]), uid: u.id, sid: s.id})).filter(q => !unit.qs.some(o => sameQ(o, q)));
+      unit.cq.forEach(q => { QS[q.id] = q; });
+      unit.all = [...unit.qs, ...unit.cq];
       UNITS[u.id] = unit;
       return unit;
     });
@@ -57,7 +61,8 @@ function P() {
     Object.keys(p.stars || {}).forEach(u => { if (p.stars[u] > 0) p.core[u] = {b: 1}; });
     Object.keys(p.learned || {}).forEach(u => { (p.core[u] = p.core[u] || {}).e = 1; });
   }
-  ['wrong', 'best', 'at'].forEach(k => { p[k] = p[k] || {}; });
+  ['wrong', 'best', 'at', 'ust'].forEach(k => { p[k] = p[k] || {}; });
+  p.rv = p.rv || {sel: [], n: 10, note: true};            // 章節複習：選了哪些章節、題數、要不要先複習重點
   p.coins = p.coins || 0; p.ship = p.ship || '🚀'; p.ships = p.ships || ['🚀']; p.daily = p.daily || {d: ''};
   return p;
 }
@@ -72,11 +77,25 @@ function touchStreak() {
   const y = new Date(Date.now() - 864e5).toLocaleDateString('sv');
   p.streak = p.lastDay === y ? p.streak + 1 : 1; p.lastDay = t;
 }
+function tally(uid, ok) {                        // 每一章最近 20 次作答的對錯，用來找出比較弱的章節
+  if (!uid || !UNITS[uid]) return;
+  const p = P(), t = p.ust[uid] = p.ust[uid] || {n: 0, r: 0, h: ''};
+  t.n++; if (ok) t.r++; t.h = (t.h + (ok ? 1 : 0)).slice(-20); save();
+}
 function record(q, ok) {
   const p = P(); p.done++; if (ok) p.right++;
   if (!ok) p.wrong[q.id] = 2;
   else if (p.wrong[q.id]) { if (--p.wrong[q.id] <= 0) delete p.wrong[q.id]; }
+  tally(q.uid, ok);
 }
+const WK = [['w0', '⚪ 還沒練習'], ['w1', '🟢 很穩'], ['w2', '🟡 還不穩'], ['w3', '🔴 待加強']];
+function weak(uid) {                             // 章節掌握度：lv 3 待加強、2 還不穩、1 很穩、0 還沒練習（或練習太少）
+  const p = P(), h = (p.ust[uid] || {}).h || '', n = h.length, r = h.split('1').length - 1, acc = n ? r / n : 0;
+  const wr = Object.keys(p.wrong).filter(id => QS[id] && QS[id].uid === uid).length;
+  const lv = (n >= 3 && acc < .6) || wr >= 3 ? 3 : (n >= 3 && acc < .8) || wr >= 1 ? 2 : n >= 3 ? 1 : 0;
+  return {n, r, acc, wr, lv, cls: WK[lv][0], label: lv || !n ? WK[lv][1] : '⚪ 練習還太少'};
+}
+const pct = w => Math.round(w.acc * 100);
 function earn(x, xp, coins = 0) {
   const p = P(); p.xp += xp; p.coins += coins;
   if (x) { x.gain.xp += xp; x.gain.coins += coins; }
@@ -176,7 +195,7 @@ function viewHome() {
     (nx ? `<a class="cont" href="#/u/${nx.id}" style="--c:${subj(nx.sid).color}">${planet(nx)}<span class="ct2"><small>${stars(nx.id) ? '繼續點亮' : '下一站'}・${esc(subj(nx.sid).name)}星系</small><b>${esc(nx.t)}</b></span><span class="go">▶</span></a>` : '') +
     `<details class="quests"><summary>🎯 今日任務 <b>${qd} / ${QUESTS.length}</b><span class="mute sm">　每完成一項 +30 ✨</span></summary><div class="qlist">${QUESTS.map(([k, name, need]) => `<span class="qst ${d.got[k] ? 'ok' : ''}">${d.got[k] ? '✅' : '◻️'} ${name}（${Math.min(d[k] || 0, need)}/${need}）</span>`).join('')}</div></details>
     <h1>星際航圖</h1>` + gradeChips() + `<div class="space gal" id="sp">${nodes}<div class="ship">${p.ship}</div></div>
-    <div class="row c"><a class="btn ghost" href="#/sprint">⏱ 迷霧突襲</a><a class="btn ghost" href="#/duel">⚔️ 雙人對戰</a></div>`;
+    <div class="row c"><a class="btn ghost" href="#/review">🎯 章節複習</a><a class="btn ghost" href="#/sprint">⏱ 迷霧突襲</a><a class="btn ghost" href="#/duel">⚔️ 雙人對戰</a></div>`;
   const sp = $('#sp'), at = () => $(`[data-sid="${DB.last || ''}"] .gorb`, sp) || $('.gorb', sp);
   park(sp, at()); window.__repark = () => park(sp, at());
   sp.onclick = e => { const a = e.target.closest('.gnode'); if (!a) return; e.preventDefault(); DB.last = a.dataset.sid; save(); fly(sp, $('.gorb', a), () => { location.hash = a.getAttribute('href'); }); };
@@ -190,12 +209,12 @@ function viewSubject(sid) {
   const next = us.find(u => stars(u.id) < 3);
   const html = Object.keys(groups).sort().map(k => {
     const list = groups[k];
-    return `<h2>${CN[list[0].g]}年級${list[0].s}學期</h2><div class="path">` + list.map(u =>
-      `<a class="node ${next && next.id === u.id ? 'next' : ''}" href="#/u/${u.id}" data-uid="${u.id}">${planet(u)}<span class="nlab"><b>${esc(u.t)}</b><small>${esc(u.k)}</small><em>${coreDots(u.id)}${LABS[u.id] ? '<span class="labtag">🧪 實驗</span>' : ''}</em></span></a>`).join('') + '</div>';
+    return `<h2>${CN[list[0].g]}年級${list[0].s}學期</h2><div class="path">` + list.map(u => { const w = weak(u.id);
+      return `<a class="node ${next && next.id === u.id ? 'next' : ''}" href="#/u/${u.id}" data-uid="${u.id}">${planet(u)}<span class="nlab"><b>${esc(u.t)}</b><small>${esc(u.k)}</small><em>${coreDots(u.id)}${LABS[u.id] ? '<span class="labtag">🧪 實驗</span>' : ''}${w.lv >= 2 ? `<span class="wtag ${w.cls}">${w.lv === 3 ? '待加強' : '還不穩'}</span>` : ''}</em></span></a>`; }).join('') + '</div>';
   }).join('');
   app.innerHTML = `<a class="back" href="#/">← 回星際航圖</a><h1>${s.icon} ${esc(s.name)}星系</h1>` +
     say(s, next ? `我是${s.guide}！點一顆星球，太空船就會飛過去。每顆星球有 **📡 探索、🎮 試煉、👾 Boss** 三個能量核心，全部拿到星球就會完全點亮。下一站建議：**${next.t}**。` : `這個年級的星球全部點亮了，太厲害了！去挑戰星系守護者吧。`) +
-    gradeChips() + `<div class="row"><a class="btn" href="#/mix/${s.id}">👑 挑戰星系守護者</a></div>
+    gradeChips() + `<div class="row"><a class="btn" href="#/mix/${s.id}">👑 挑戰星系守護者</a><a class="btn ghost" href="#/review/${s.id}">🎯 章節複習${(() => { const n = us.filter(u => weak(u.id).lv >= 2).length; return n ? `<i class="wn">${n}</i>` : ''; })()}</a></div>
     <div class="space" id="sp">${html || '<p class="mute">這個年級沒有此科目的星球。</p>'}<div class="ship">${p.ship}</div></div>`;
   const sp = $('#sp'), at = () => $(`[data-uid="${p.at[sid] || (next && next.id) || ''}"] .pl`, sp) || $('.node .pl', sp);
   park(sp, at()); window.__repark = () => park(sp, at());
@@ -222,7 +241,7 @@ const GK = {
 function viewUnit(uid) {
   const u = UNITS[uid]; if (!u) return viewHome();
   const s = subj(u.sid), L = LESSONS[uid], c = P().core[uid] || {}, n = stars(uid), lab = LABS[uid], boss = bossOf(uid);
-  const g = L && L.game ? GK[gameKind(u, L.game)] : null;
+  const g = L && L.game ? GK[gameKind(u, L.game)] : null, w = weak(uid);
   const row = (k, ic, name, desc, done) => `<a class="corerow ${done ? 'ok' : ''}" href="#/play/${uid}/${k}"><span class="ci">${ic}</span><span class="ct"><b>${name}</b><small>${esc(desc)}</small></span><span class="cs">${done ? '⭐' : '▶'}</span></a>`;
   app.innerHTML = `<a class="back" href="#/s/${s.id}">← 回${esc(s.name)}星系</a>
   <section class="mission" style="--c:${s.color}">
@@ -235,7 +254,8 @@ function viewUnit(uid) {
       ${g ? row('g', g.ic, '試煉：' + g.name, L.game.title || '', c.g) : ''}
       ${row('b', boss.e, 'Boss 戰：' + boss.n, '用學到的知識打敗牠', c.b)}
     </div>
-    ${n ? `<a class="btn ghost" href="#/codex/${uid}">📔 這顆星球的圖鑑筆記</a>` : ''}
+    <div class="ust"><em class="wk ${w.cls}">${w.label}</em><span class="mute sm">${w.n ? `最近 ${w.n} 次作答答對 ${pct(w)}%` : '還沒有作答紀錄'}${w.wr ? `・錯題 ${w.wr} 題` : ''}</span></div>
+    <div class="row">${n ? `<a class="btn ghost" href="#/codex/${uid}">📔 這顆星球的圖鑑筆記</a>` : ''}<a class="btn ghost" href="#/train/${uid}">🎯 這一章弱點特訓</a></div>
   </section>`;
 }
 
@@ -345,7 +365,7 @@ function stepLab(box, x, done) {
       if (m.set) m.set(s); m.sol(s);              // 公布正確答案：畫面換成正確的樣子
       html = `<b class="no">✘ 這樣還不對。</b>${my ? `<br>你的答案：${my}` : ''}${why ? `<br>${m.why ? '原因' : '怎麼想'}：${md(why)}` : ''}<br><b>正確答案</b>（畫面已經換成正確的樣子）：${md(txt(m.say))}`;
     }
-    judged = true; s.judged = true; s.right = ok;
+    judged = true; s.judged = true; s.right = ok; tally(x.u.id, ok);
     refresh(true);
     $('.lab', box).classList.add('judged'); $('#lm', box).classList.add(ok ? 'done' : 'miss');
     $('#lf', box).innerHTML = note(html, ok);
@@ -406,7 +426,7 @@ function nextBtn(el, label, wait, fn) {         // 答錯時按鈕先鎖 1.5 秒
   const b = $('#nx', el); b.onclick = () => { if (b.dataset.used) return; b.dataset.used = 1; fn(); };
   if (wait) later(() => { b.disabled = false; b.textContent = label; b.classList.add('pulse'); }, 1500);
 }
-const gsay = (box, html, good) => { const f = $('#gf', box); if (f) f.innerHTML = note(html, good); };
+const gsay = (box, html, good) => { const f = $('#gf', box); if (f) f.innerHTML = note(html, good); if (html && box.__tal) box.__tal(!!good); };   // 小遊戲每次判定都記進章節紀錄
 
 /* --- 步驟：修復知識碎片（關鍵字被迷霧偷走：全部填好再按「確定作答」，只有一次機會） --- */
 function stepRestore(box, x, done, c) {
@@ -447,7 +467,7 @@ function stepRestore(box, x, done, c) {
   const judge = () => {
     judged = true;
     const bad = blanks.map((a, k) => put(k) === a ? '' : `第 ${k + 1} 格你填了「${esc(put(k))}」：${whyNot(put(k))}這一格應該是「<b>${esc(a)}</b>」。`).filter(Boolean);
-    bad.length ? sfx.no() : sfx.ok(); fog();
+    bad.length ? sfx.no() : sfx.ok(); tally(x.u.id, !bad.length); fog();
     $('#rf', box).innerHTML = note(bad.length ? `<b class="no">✘ 有 ${bad.length} 格填錯了</b><br>${bad.join('<br>')}` : '<b class="ok">✔ 全部填對了！</b>每個關鍵字都回到正確的位置。', !bad.length);
     earn(x, 8, bad.length ? 3 : 6);
     nextBtn($('#rf', box), '收進圖鑑 →', bad.length > 0, () => done());
@@ -475,7 +495,8 @@ function stepQuick(box, x, done, c) {            // 關鍵字太少的卡片：�
     const b = e.target.closest('.opt');
     if (b && !b.disabled) { pick = +b.dataset.i; return pickOpt(box, b); }
     if (!e.target.closest('#cf') || pick < 0) return;
-    const ok = opts[pick] === q.right; revealOpts(box, q, opts, pick); ok ? sfx.ok() : sfx.no();
+    const ok = opts[pick] === q.right, rq = x.u.all.find(o => sameQ(o, q)); revealOpts(box, q, opts, pick); ok ? sfx.ok() : sfx.no();
+    if (rq) record(rq, ok);                        // 答錯也會記進錯題本
     $('#qf', box).innerHTML = note(ok ? '<b class="ok">✔ 答對了！</b>每個選項為什麼對、為什麼錯，都寫在選項下面。'
       : `<b class="no">✘ 答錯了</b>　正確答案是「<b>${esc(q.right)}</b>」。看看選項下面的說明，弄懂為什麼。`, ok);
     nextBtn($('#qf', box), '收進圖鑑 →', !ok, () => { earn(x, 8, ok ? 6 : 3); done(); });
@@ -501,7 +522,7 @@ function stepScan(box, x, done, c) {
   box.onclick = e => {
     if (phase === 1 && !judged && e.target.closest('#cf')) {
       if (pick < 0) return;
-      judged = true; const ans = tests[ti], ok = pick === ans; if (!ok) miss++; ok ? sfx.ok() : sfx.no(); draw();
+      judged = true; const ans = tests[ti], ok = pick === ans; if (!ok) miss++; ok ? sfx.ok() : sfx.no(); tally(x.u.id, ok); draw();
       $('#sf', box).innerHTML = note(ok ? `<b class="ok">✔ 答對了！</b>這段資料說的就是「${md(items[ans][0])}」。`
         : `<b class="no">✘ 不是「${md(items[pick][0])}」。</b>它的資料是：${md(items[pick][1])}<br>這段資料說的是「<b>${md(items[ans][0])}</b>」（綠色那個）。`, ok);
       const last = ti + 1 >= tests.length;
@@ -521,7 +542,8 @@ function stepGame(box, x, done) {
   const g = x.L.game, meta = GK[gameKind(x.u, g)];
   box.innerHTML = `<div class="gm"><div class="gmt">${meta.ic} ${esc(meta.name)}<small>${esc(g.title || '')}</small></div><p class="mute">${esc(meta.ask(g))}</p><div id="gb"></div></div>`;
   if (window.__fast) window.__GK = GK;
-  meta.run($('#gb', box), g, miss => {
+  const gb = $('#gb', box); gb.__tal = ok => tally(x.u.id, ok);
+  meta.run(gb, g, miss => {
     earn(x, 15, miss ? 10 : 20); bump('game'); sfx.win(); if (!miss) confetti();
     box.innerHTML = `<div class="panel result"><div class="big">${miss ? '🎮' : '💯'}</div><h1>${miss ? '試煉通過！' : '完美過關，零失誤！'}</h1><p>失誤 ${miss} 次</p>
       ${g.recap ? `<div class="exp good">🧠 記起來：${md(g.recap)}</div>` : ''}<div class="row c" style="margin-top:14px"><button class="btn pulse" id="go">繼續 →</button></div></div>`;
@@ -704,20 +726,25 @@ let timerId = null;
 const stopTimer = () => { if (timerId) { clearInterval(timerId); timerId = null; } };
 const FOES = ['👾', '🐙', '👹', '🤖', '🦑', '👻', '🦂', '🕷️'];
 function battle(box, cfg, done) {
-  const H = cfg.hearts || 3, pool = cfg.order ? cfg.qs.slice() : shuffle(cfg.qs);
-  const total = cfg.timer ? pool.length : Math.min(pool.length, (cfg.n || 8) + H - 1);  // 每題只問一次
-  const K = cfg.timer ? Infinity : Math.max(1, total - (H - 1)), dmg = 100 / K;            // 打倒迷霧獸需要命中 K 次
+  const H = cfg.hearts || 3, TR = !!cfg.train, pool = cfg.order ? cfg.qs.slice() : shuffle(cfg.qs);   // TR：弱點特訓（不會輸，題目全部做完）
+  const total = cfg.timer || TR ? pool.length : Math.min(pool.length, (cfg.n || 8) + H - 1);  // 每題只問一次
+  const K = cfg.timer || TR ? Infinity : Math.max(1, total - (H - 1)), dmg = 100 / K;            // 打倒迷霧獸需要命中 K 次
   let queue = pool.slice(0, total), cur = null, locked = true, over = false, paused = false;
-  const st = {hp: 100, dealt: 0, hearts: H, combo: 0, maxCombo: 0, right: 0, total: 0, scan: cfg.timer ? 0 : 1, shield: cfg.timer ? 0 : 1, shieldOn: false, kills: 0, left: cfg.timer || 0};
+  const st = {hp: 100, dealt: 0, hearts: H, combo: 0, maxCombo: 0, right: 0, total: 0, asked: 0, log: [], scan: cfg.timer || TR ? 0 : 1, shield: cfg.timer || TR ? 0 : 1, shieldOn: false, kills: 0, left: cfg.timer || 0};
+  const CH = TR ? (cfg.chapters || []).map(uid => ({uid, n: queue.filter(q => q.uid === uid).length, r: 0})).filter(c => c.n) : [];
   const Q = s => box.querySelector(s);
-  box.innerHTML = `<div class="bt" id="bt">
-    <div class="foe" id="foe"><div class="fe" id="fe">${cfg.e}</div><div class="finfo"><div class="fname">${esc(cfg.name)}</div>${cfg.timer ? `<div class="timer" id="tm">${st.left}</div>` : '<div class="hpb"><i id="hp"></i></div>'}</div></div>
+  const top = TR ? `<div class="foe fogs" id="foe">${CH.map(c => `<div class="fogc" data-u="${c.uid}" style="--f:1">${planet(UNITS[c.uid])}<small>${esc(UNITS[c.uid].t)}</small><em>0 / ${c.n}</em></div>`).join('')}</div>`
+    : `<div class="foe" id="foe"><div class="fe" id="fe">${cfg.e}</div><div class="finfo"><div class="fname">${esc(cfg.name)}</div>${cfg.timer ? `<div class="timer" id="tm">${st.left}</div>` : '<div class="hpb"><i id="hp"></i></div>'}</div></div>`;
+  box.innerHTML = `<div class="bt${TR ? ' train' : ''}" id="bt">${top}
     <div class="beam" id="beam"></div>
-    <div class="mebar"><span class="me">${P().ship}</span><span id="hearts"></span><span class="combo" id="combo"></span><span class="skills">${cfg.timer ? '<b id="kills"></b>' : '<button class="skb" id="sk1"></button><button class="skb" id="sk2"></button>'}</span></div>
+    <div class="mebar"><span class="me">${P().ship}</span><span id="hearts"></span><span class="combo" id="combo"></span><span class="skills">${cfg.timer ? '<b id="kills"></b>' : TR ? '' : '<button class="skb" id="sk1"></button><button class="skb" id="sk2"></button>'}</span></div>
     <div id="qa"></div></div>`;
   const hud = () => {
     if (cfg.timer) Q('#kills').textContent = '擊退 ' + st.kills + ' 隻';
-    else {
+    else if (TR) {                                 // 每一章答對越多，迷霧散得越開
+      Q('#hearts').textContent = `第 ${Math.max(1, st.asked)} / ${total} 題　答對 ${st.right}`;
+      CH.forEach(c => { const el = Q(`.fogc[data-u="${c.uid}"]`); el.style.setProperty('--f', (1 - c.r / c.n).toFixed(2)); $('em', el).textContent = c.r + ' / ' + c.n; });
+    } else {
       st.hp = Math.max(0, 100 * (1 - st.dealt / K)); Q('#hp').style.width = st.hp + '%';
       Q('#hearts').textContent = '❤️'.repeat(Math.max(0, st.hearts)) + '🖤'.repeat(H - Math.max(0, st.hearts));
       Q('#sk1').textContent = '🔍 掃描 ×' + st.scan; Q('#sk1').disabled = !st.scan || locked;
@@ -725,20 +752,21 @@ function battle(box, cfg, done) {
     }
     Q('#combo').textContent = st.combo > 1 ? '🔥 連擊 ×' + st.combo : '';
   };
-  const fx = (id, cls) => { const el = Q('#' + id); el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+  const fxe = (el, cls) => { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+  const fx = (id, cls) => fxe(Q('#' + id), cls);
   const pop = t => { const d = document.createElement('span'); d.className = 'dmg'; d.textContent = t; Q('#foe').appendChild(d); setTimeout(() => d.remove(), 900); };
   const end = () => {
     if (over) return; over = true; locked = true; stopTimer(); document.onkeydown = null;
-    const win = cfg.timer ? true : st.dealt >= K - 1e-9;
-    if (win && !cfg.timer) { Q('#foe').classList.add('dead'); sfx.boom(); }
-    later(() => done({win, hearts: Math.max(0, st.hearts), right: st.right, total: st.total, maxCombo: st.maxCombo, kills: st.kills}), win && !cfg.timer ? 950 : 350);
+    const win = cfg.timer || TR ? true : st.dealt >= K - 1e-9, boom = win && !cfg.timer && !TR;
+    if (boom) { Q('#foe').classList.add('dead'); sfx.boom(); }
+    later(() => done({win, hearts: Math.max(0, st.hearts), right: st.right, total: st.total, maxCombo: st.maxCombo, kills: st.kills, log: st.log}), boom ? 950 : 350);
   };
   const ask = () => {
     if (over) return;
     paused = false;
     if (cfg.timer ? st.left <= 0 : (st.dealt >= K - 1e-9 || st.hearts <= 0)) return end();
     if (!queue.length) return end();                // 題目都問過了：不會重複出題
-    const q = queue.shift(), tf = !cfg.timer && q.wrongs.length >= 2 && Math.random() < 0.3;
+    const q = queue.shift(), tf = !cfg.timer && q.wrongs.length >= 2 && Math.random() < 0.3; st.asked++;
     cur = {q, tf, pick: null}; locked = false;
     const u = cfg.tag && q.uid && UNITS[q.uid];
     let h = `<div class="qbox">${u ? `<span class="qtag">${esc(subj(q.sid).name)}・${esc(u.t)}</span>\n` : ''}${esc(q.q)}</div>`;
@@ -763,22 +791,26 @@ function battle(box, cfg, done) {
       why = `<br><span class="sm">${ok ? '' : `正確答案是「<b>${esc(q.right)}</b>」。`}每個選項為什麼對、為什麼錯，都寫在選項下面。</span>`;
     }
     if (q.id) record(q, ok);
+    st.log.push({q, ok});
+    const ch = TR && CH.find(c => c.uid === q.uid); if (ch && ok) ch.r++;
     let head;
     if (ok) {
       st.right++; st.combo++; st.maxCombo = Math.max(st.maxCombo, st.combo); st.kills++; bump('right');
       const crit = st.combo >= 3, d = Math.round(dmg * (crit ? 1.5 : 1)); st.dealt += crit ? 1.5 : 1;
-      sfx.zap(); fx('beam', 'fire'); fx('foe', 'hit'); pop(cfg.timer ? '💥' : crit ? '爆擊 −' + d : '−' + d);
+      sfx.zap(); fx('beam', 'fire');
+      if (TR) { fxe(Q(`.fogc[data-u="${q.uid}"]`), 'clr'); pop(st.combo >= 3 ? '🔥 連擊 ×' + st.combo : '✨ 迷霧散開'); }
+      else { fx('foe', 'hit'); pop(cfg.timer ? '💥' : crit ? '爆擊 −' + d : '−' + d); }
       if (cfg.timer) Q('#fe').textContent = FOES[st.kills % FOES.length];
-      head = `<b class="ok">✔ 答對了！${cfg.timer ? '擊退一隻迷霧怪' : crit ? '連擊爆擊！' : '命中！'}</b>`;
+      head = `<b class="ok">✔ 答對了！${TR ? '「' + esc(UNITS[q.uid] ? UNITS[q.uid].t : '') + '」的迷霧散開一些' : cfg.timer ? '擊退一隻迷霧怪' : crit ? '連擊爆擊！' : '命中！'}</b>`;
     } else {
       st.combo = 0; sfx.no(); fx('bt', 'shake');
-      if (st.shieldOn) { st.shieldOn = false; st.dealt += 1; fx('foe', 'hit'); pop('🛡️ 反彈'); toast('🛡️ 護盾擋下攻擊，還把它反彈回去！'); } else if (!cfg.timer) st.hearts--;
-      head = '<b class="no">✘ 答錯了，被反擊！</b>';
+      if (st.shieldOn) { st.shieldOn = false; st.dealt += 1; fx('foe', 'hit'); pop('🛡️ 反彈'); toast('🛡️ 護盾擋下攻擊，還把它反彈回去！'); } else if (!cfg.timer && !TR) st.hearts--;
+      head = TR ? '<b class="no">✘ 答錯了，這題已經記進錯題本。</b>' : '<b class="no">✘ 答錯了，被反擊！</b>';
     }
     save(); hud();
-    const fin = cfg.timer ? st.left <= 0 || !queue.length : st.dealt >= K - 1e-9 || st.hearts <= 0 || !queue.length;
+    const fin = cfg.timer ? st.left <= 0 || !queue.length : TR ? !queue.length : st.dealt >= K - 1e-9 || st.hearts <= 0 || !queue.length;
     Q('#after').innerHTML = note(head + why, ok);
-    nextBtn(Q('#after'), fin ? '查看結果 →' : cfg.timer ? '下一隻 →' : '繼續戰鬥 →', !ok, ask);
+    nextBtn(Q('#after'), fin ? '查看結果 →' : cfg.timer ? '下一隻 →' : TR ? '下一題 →' : '繼續戰鬥 →', !ok, ask);
   };
   box.onclick = e => {
     const t = e.target.closest('button'); if (!t || over) return;
@@ -810,8 +842,7 @@ const sameQ = (a, b) => {                        // 兩題是不是在問同一�
 };
 function stepBoss(box, x, done) {
   const boss = bossOf(x.u.id), seen = x.seen || [], fresh = [], again = [];
-  const extra = x.L.cards.filter(c => c.chk && !x.u.qs.some(q => sameQ(q, chkQ(c)))).map(chkQ);
-  [...x.u.qs, ...extra].forEach(q => (seen.some(o => sameQ(o, q)) ? again : fresh).push(q));
+  x.u.all.forEach(q => (seen.some(o => sameQ(o, q)) ? again : fresh).push(q));     // 題庫＋知識碎片的快問（已去除重複）
   battle(box, {name: boss.n, e: boss.e, qs: [...shuffle(fresh), ...shuffle(again)], order: true, n: 8, hearts: 3}, res => {
     if (res.win) { earn(x, 20 + res.right * 3, 20 + res.hearts * 10); bump('boss'); }
     done(res);
@@ -836,15 +867,33 @@ function arena(cfg) {                           // 不屬於單一星球的戰�
 }
 function viewMix(sid) {
   const s = subj(sid); if (!s) return viewHome();
-  arena({title: s.name + '・星系守護者', back: '#/s/' + sid, name: '星系守護者', e: '🐉', qs: s.units.filter(inGrade).flatMap(u => u.qs), n: 15, hearts: 4, tag: true});
+  arena({title: s.name + '・星系守護者', back: '#/s/' + sid, name: '星系守護者', e: '🐉', qs: s.units.filter(inGrade).flatMap(u => u.all), n: 15, hearts: 4, tag: true});
+}
+/* 迷霧突襲／雙人對戰的出題範圍：選年級 → 選科目 →（可以只出指定章節） */
+function pickerHTML() {
+  return `<div class="chips" id="sp">${SUBJECTS.filter(s => s.units.some(inGrade)).map(s => `<button class="chip on" data-s="${s.id}">${s.icon} ${esc(s.name)}</button>`).join('')}</div>
+    <details class="chf" id="chf"><summary>📑 出題章節：<b id="chn">全部章節</b></summary><p class="mute sm">不選＝上面科目的全部章節。點章節可以選或取消；🔴 待加強、🟡 還不穩是比較弱的章節。</p><div id="chl"></div></details>`;
+}
+function bindPicker() {
+  const sel = new Set(), on = () => $$('#sp .on').map(b => b.dataset.s);
+  const draw = () => {
+    $('#chl').innerHTML = on().map(sid => { const s = subj(sid);
+      return `<div class="chg"><b>${s.icon} ${esc(s.name)}</b><div class="chips">${s.units.filter(inGrade).map(u => { const w = weak(u.id);
+        return `<button class="chip ${sel.has(u.id) ? 'on' : ''}" data-u="${u.id}" aria-pressed="${sel.has(u.id)}">${w.lv === 3 ? '🔴 ' : w.lv === 2 ? '🟡 ' : ''}${CN[u.g]}${u.s}・${esc(u.t)}</button>`; }).join('')}</div></div>`; }).join('') || '<p class="mute sm">先在上面選科目。</p>';
+    $('#chn').textContent = sel.size ? `只出 ${sel.size} 個章節` : '全部章節';
+  };
+  $('#sp').onclick = e => { const b = e.target.closest('[data-s]'); if (!b) return; b.classList.toggle('on'); const o = on(); [...sel].forEach(id => { if (!o.includes(UNITS[id].sid)) sel.delete(id); }); draw(); };
+  $('#chl').onclick = e => { const b = e.target.closest('[data-u]'); if (!b) return; const id = b.dataset.u; sel.has(id) ? sel.delete(id) : sel.add(id); sfx.tap(); draw(); };
+  draw();
+  return () => sel.size ? [...sel].flatMap(id => UNITS[id].all) : SUBJECTS.filter(s => on().includes(s.id)).flatMap(s => s.units.filter(inGrade).flatMap(u => u.all));
 }
 function viewSprint() {
   const p = P();
   app.innerHTML = heroHTML() + `<h1>⏱ 迷霧突襲</h1><p class="mute">60 秒內，迷霧怪一隻接一隻衝過來！選好答案按「確定」，答對就能擊退一隻。每題只出現一次，都會說明對錯原因，看說明的時候計時會暫停。（個人最佳：${p.best['sprint' + DB.grade] || 0} 隻）</p>` +
-    gradeChips() + `<div class="chips" id="sp">${SUBJECTS.map(s => `<button class="chip on" data-s="${s.id}">${s.icon} ${esc(s.name)}</button>`).join('')}</div><button class="btn" id="go">開始突襲 🚀</button>`;
-  $('#sp').onclick = e => { const b = e.target.closest('[data-s]'); if (b) b.classList.toggle('on'); };
-  $('#go').onclick = () => { const on = $$('#sp .on').map(b => b.dataset.s);
-    arena({title: '迷霧突襲', back: '#/sprint', name: '迷霧怪群', e: '👾', timer: 60, tag: true, n: 999, qs: SUBJECTS.filter(s => on.includes(s.id)).flatMap(s => s.units.filter(inGrade).flatMap(u => u.qs))}); };
+    gradeChips() + pickerHTML() + `<button class="btn" id="go">開始突襲 🚀</button>`;
+  const pool = bindPicker();
+  $('#go').onclick = () => { const qs = pool(); if (!qs.length) return toast('先選至少一個科目');
+    arena({title: '迷霧突襲', back: '#/sprint', name: '迷霧怪群', e: '👾', timer: 60, tag: true, n: 999, qs}); };
 }
 function viewWrong() {
   const p = P();
@@ -860,12 +909,110 @@ function viewWrong() {
   if (list.length) $('#redo').onclick = () => arena({title: '錯題復仇戰', back: '#/wrong', name: '迷霧殘黨', e: '👻', qs: list, n: Math.min(10, list.length), hearts: 3, tag: true});
 }
 
+/* ---------- 章節複習：選年級 → 選科目 → 選章節，針對比較弱的章節特訓 ---------- */
+const keyTerms = L => [...new Set(L.cards.flatMap(c => (c.b.match(/\*\*(.+?)\*\*/g) || []).map(t => t.slice(2, -2))))];
+const weakFirst = (a, b) => { const A = weak(a.id), B = weak(b.id); return B.lv - A.lv || A.acc - B.acc || B.wr - A.wr; };
+function viewReview(sid) {
+  const p = P(), rv = p.rv, subs = SUBJECTS.filter(s => s.units.some(inGrade));
+  const s = subs.find(x => x.id === sid) || subs.find(x => x.id === DB.last) || subs[0]; if (!s) return viewHome();
+  rv.sel = rv.sel.filter(id => UNITS[id]);
+  const us = s.units.filter(inGrade), groups = {};
+  us.forEach(u => (groups[u.g + u.s] = groups[u.g + u.s] || []).push(u));
+  app.innerHTML = `<h1>🎯 章節複習</h1>
+    <p class="mute">選年級、選科目，再點選想加強的章節（可以跨科目一起選）。每一章都會顯示最近的答對率和錯題數：<span class="wk w3">🔴 待加強</span> <span class="wk w2">🟡 還不穩</span> <span class="wk w1">🟢 很穩</span></p>
+    <div class="rvs"><b class="rvn">① 選年級</b>${gradeChips()}</div>
+    <div class="rvs"><b class="rvn">② 選科目</b><div class="chips">${subs.map(x => { const n = x.units.filter(inGrade).filter(u => weak(u.id).lv >= 2).length;
+      return `<a class="chip ${x.id === s.id ? 'on' : ''}" href="#/review/${x.id}">${x.icon} ${esc(x.name)}${n ? `<i class="wn" title="${n} 個比較弱的章節">${n}</i>` : ''}</a>`; }).join('')}</div></div>
+    <div class="rvs"><b class="rvn">③ 選章節 <small class="mute">${esc(s.name)}</small></b>
+      <div class="row"><button class="btn ghost sm" id="rauto">🎯 自動選出弱點</button><button class="btn ghost sm" id="rall">這一科全選</button><button class="btn ghost sm" id="rnone">清除這一科</button></div>
+      <div id="rlist"></div></div>
+    <div class="rvs" id="rgo"></div>`;
+  const draw = () => {
+    $('#rlist').innerHTML = Object.keys(groups).sort().map(k => `<h3 class="rvh">${CN[groups[k][0].g]}年級${groups[k][0].s}學期</h3>` + groups[k].map(u => { const w = weak(u.id), on = rv.sel.includes(u.id);
+      return `<button class="chrow ${on ? 'on' : ''}" data-u="${u.id}" aria-pressed="${on}"><span class="ck">${on ? '✔' : ''}</span>${planet(u)}<span class="cht"><b>${esc(u.t)}</b><small>${esc(u.k)}</small>
+        <span class="chs"><em class="wk ${w.cls}">${w.label}</em><small>${w.n ? `最近 ${w.n} 次作答答對 ${pct(w)}%` : '還沒有作答紀錄'}${w.wr ? `・錯題 ${w.wr} 題` : ''}</small></span>${w.n ? `<i class="accb ${w.cls}"><i style="width:${pct(w)}%"></i></i>` : ''}</span></button>`; }).join('')).join('')
+      || '<p class="mute">這個年級沒有這個科目的章節。</p>';
+    const sel = rv.sel.map(id => UNITS[id]), N = sel.reduce((n, u) => n + u.all.length, 0);
+    const opts = [10, 20].filter(k => k < N).concat(0), n = opts.includes(rv.n) ? rv.n : 0, cards = rv.note ? Math.min(4, sel.length) : 0;
+    $('#rgo').innerHTML = `<b class="rvn">④ 開始複習</b>` + (sel.length
+      ? `<div class="chips">${sel.map(u => `<button class="chip on sm2" data-x="${u.id}" aria-label="取消 ${esc(u.t)}">${subj(u.sid).icon} ${esc(u.t)} ✕</button>`).join('')}</div>
+        <div class="row"><span class="mute sm">題數</span>${opts.map(k => `<button class="chip ${k === n ? 'on' : ''}" data-n="${k}">${k ? k + ' 題' : `全部 ${N} 題`}</button>`).join('')}</div>
+        <div class="row"><button class="chip ${rv.note ? 'on' : ''}" id="rnote" aria-pressed="${!!rv.note}">${rv.note ? '☑' : '☐'} 先複習重點（每章一張知識碎片）</button></div>
+        <button class="btn wide" id="rstart">🚀 開始弱點特訓（${sel.length} 章・${n || N} 題）</button>
+        <p class="mute sm">流程：${cards ? `先複習 ${cards} 張重點卡（讀完再把關鍵字填回去）→ ` : ''}${n || N} 題特訓（錯題本裡的題目優先出）→ 看每一章的進步。每題都要按「確定作答」，只有一次機會，對錯都會說明原因。</p>`
+      : '<p class="mute">還沒選章節：在上面點章節就能選，也可以按「🎯 自動選出弱點」。</p>');
+  };
+  const add = list => list.forEach(u => { if (!rv.sel.includes(u.id)) rv.sel.push(u.id); });
+  $('#rlist').onclick = e => { const b = e.target.closest('[data-u]'); if (!b) return; const id = b.dataset.u, i = rv.sel.indexOf(id); if (i >= 0) rv.sel.splice(i, 1); else rv.sel.push(id); sfx.tap(); save(); draw(); };
+  $('#rgo').onclick = e => {
+    const x = e.target.closest('[data-x]'); if (x) { rv.sel = rv.sel.filter(id => id !== x.dataset.x); sfx.tap(); save(); return draw(); }
+    const k = e.target.closest('[data-n]'); if (k) { rv.n = +k.dataset.n; sfx.tap(); save(); return draw(); }
+    if (e.target.closest('#rnote')) { rv.note = !rv.note; sfx.tap(); save(); return draw(); }
+    if (e.target.closest('#rstart') && rv.sel.length) location.hash = '#/train/' + rv.sel.join(',');
+  };
+  $('#rauto').onclick = () => { const w = us.filter(u => weak(u.id).lv >= 2).sort(weakFirst);
+    if (!w.length) return toast(`${s.name}目前沒有偵測到比較弱的章節 👍 可以自己點選想複習的章節`);
+    add(w); sfx.tap(); save(); draw(); toast(`選出 ${w.length} 個比較弱的章節`); };
+  $('#rall').onclick = () => { add(us); sfx.tap(); save(); draw(); };
+  $('#rnone').onclick = () => { rv.sel = rv.sel.filter(id => !us.some(u => u.id === id)); sfx.tap(); save(); draw(); };
+  draw();
+}
+function viewTrain(ids) {
+  const p = P(), rv = p.rv, us = [...new Set(ids)].map(id => UNITS[id]).filter(Boolean).sort(weakFirst);
+  if (!us.length) { location.hash = '#/review'; return; }
+  const before = {}; us.forEach(u => { before[u.id] = weak(u.id); });
+  const lists = us.map(u => [...shuffle(u.all.filter(q => p.wrong[q.id])), ...shuffle(u.all.filter(q => !p.wrong[q.id]))]);   // 錯題本裡的題目優先
+  const qs = []; for (let k = 0; lists.some(l => l.length); k = (k + 1) % lists.length) if (lists[k].length) qs.push(lists[k].shift());   // 各章輪流出題
+  runTrain(us, qs.slice(0, rv.n && rv.n < qs.length ? rv.n : qs.length), rv.note, before);
+}
+function runTrain(us, qs, notes, before) {
+  const back = '#/review/' + us[0].sid, gain = {xp: 0, coins: 0}, steps = [];
+  if (notes) us.slice(0, 4).forEach(u => {            // 先複習重點：每章一張知識碎片（讀完再把關鍵字填回去）
+    const L = LESSONS[u.id]; if (!L) return;
+    const fit = L.cards.filter(c => !c.flip && new Set((c.b.match(/\*\*(.+?)\*\*/g) || []).map(t => t.slice(2, -2)).filter(t => t.length <= 14)).size >= 2);
+    const c = shuffle(fit.length ? fit : L.cards.filter(c => c.flip))[0]; if (!c) return;
+    steps.push({u, c, f: c.flip ? stepScan : stepRestore, x: {u, s: subj(u.sid), L, terms: keyTerms(L), gain, got: [], lost: false}});
+  });
+  steps.push({f: null});
+  touchStreak(); save(); document.body.classList.add('playing');
+  app.innerHTML = `<div class="stage"><div class="hud"><a href="${back}" class="hx">✕</a><b>🎯 弱點特訓</b><span class="dots" id="dots"></span></div><div id="sc"></div></div>`;
+  const box = $('#sc'); let i = 0;
+  $('.hx', app).onclick = e => { if (!window.__fast && !confirm('確定要離開嗎？這次特訓還沒做完。')) e.preventDefault(); };
+  const run = () => {
+    $('#dots').innerHTML = steps.map((_, k) => `<i class="${k < i ? 'd' : k === i ? 'c' : ''}"></i>`).join('');
+    box.onclick = box.oninput = null; box.innerHTML = ''; window.scrollTo(0, 0);
+    const st = steps[i];
+    if (st.f) { box.style.setProperty('--c', subj(st.u.sid).color); return st.f(box, st.x, () => { i++; run(); }, st.c); }
+    box.style.removeProperty('--c');
+    battle(box, {train: true, name: '弱點特訓', qs, order: true, tag: true, chapters: us.map(u => u.id)}, res => trainReport(us, res, gain, back, before));
+  };
+  run();
+}
+function trainReport(us, res, gain, back, before) {
+  const log = res.log || [], miss = log.filter(l => !l.ok).map(l => l.q), all = res.total && res.right === res.total;
+  earn({gain}, 10 + res.right * 5, 10 + res.right * 2);
+  sfx.win(); if (all) confetti();
+  const rows = us.map(u => { const mine = log.filter(l => l.q.uid === u.id); if (!mine.length) return '';
+    const a = before[u.id] || weak(u.id), b = weak(u.id), r = mine.filter(l => l.ok).length;
+    return `<div class="rr">${planet(u)}<div class="rrt"><b>${esc(u.t)}</b><small>${esc(subj(u.sid).name)}・這次答對 ${r} / ${mine.length}</small>
+      <span class="rrl"><em class="wk ${a.cls}">${a.label}</em> → <em class="wk ${b.cls}">${b.label}</em></span>${b.n ? `<small>最近 ${b.n} 次作答答對 ${pct(b)}%${b.wr ? `・錯題 ${b.wr} 題` : ''}</small>` : ''}</div>
+      <a class="btn ghost sm" href="#/codex/${u.id}" title="看這一章的重點筆記">📔<span class="t"> 筆記</span></a></div>`; }).join('');
+  app.innerHTML = `<div class="quiz"><div class="panel result rvrep">
+    <div class="big">${all ? '🏆' : '🎯'}</div><h1>${all ? '全部答對，太厲害了！' : '特訓完成！'}</h1>
+    <p>答對 <b>${res.right} / ${res.total}</b>　最高連擊 ${res.maxCombo}</p><p>本次獲得　經驗 <b>+${gain.xp}</b>　星塵 <b>+${gain.coins} ✨</b></p>
+    <h2>各章節的變化</h2><div class="rrs">${rows}</div>
+    ${miss.length ? `<h2>這次答錯的 ${miss.length} 題（已經記進錯題本）</h2><div class="panel"><ul class="wl">${miss.map(q => `<li><div>${esc(q.q)}</div><div class="a">✔ ${esc(q.right)}</div>${q.exp ? `<div class="mute sm">💡 ${esc(q.exp)}</div>` : ''}<span class="sm mute">${esc(subj(q.sid).name)}・${esc(UNITS[q.uid].t)}</span></li>`).join('')}</ul></div>` : '<p class="c">這次沒有答錯的題目 🎉</p>'}
+    <div class="row c"><button class="btn" id="again">再特訓一次</button>${miss.length ? `<button class="btn ghost" id="redo">👻 只練這次答錯的 ${miss.length} 題</button>` : ''}<a class="btn ghost" href="${back}">回章節複習</a></div></div></div>`;
+  $('#again').onclick = () => viewTrain(us.map(u => u.id));
+  const rd = $('#redo'); if (rd) rd.onclick = () => { const v = us.filter(u => miss.some(q => q.uid === u.id)), b = {}; v.forEach(u => { b[u.id] = weak(u.id); }); runTrain(v, shuffle(miss), false, b); };
+}
+
 /* ---------- 雙人對戰：能量球推擠 ---------- */
 function viewDuel() {
   app.innerHTML = `<h1>⚔️ 雙人對戰</h1><p class="mute">兩個人用同一台裝置，兩邊看到同一題。先點選答案，再按自己那邊的「確定」。<b>先答對的人</b>把能量球推向對手。<b>每題每人只能答一次</b>：答錯就失去這題的作答權，並看到為什麼錯；每題結束後，兩邊都會看到每個選項的說明。把球推到對方底線就贏了！<br>鍵盤：左邊玩家用 1 2 3 4 選、5 確定；右邊玩家用 7 8 9 0 選、－ 確定；Enter 進入下一題。手機請面對面坐。</p>` +
-    gradeChips() + `<div class="chips" id="sp">${SUBJECTS.map(s => `<button class="chip on" data-s="${s.id}">${s.icon} ${esc(s.name)}</button>`).join('')}</div><button class="btn" id="go">開始對戰 ⚔️</button>`;
-  $('#sp').onclick = e => { const b = e.target.closest('[data-s]'); if (b) b.classList.toggle('on'); };
-  $('#go').onclick = () => { const on = $$('#sp .on').map(b => b.dataset.s); const qs = SUBJECTS.filter(s => on.includes(s.id)).flatMap(s => s.units.filter(inGrade).flatMap(u => u.qs)); if (qs.length) duel(qs); };
+    gradeChips() + pickerHTML() + `<button class="btn" id="go">開始對戰 ⚔️</button>`;
+  const pool = bindPicker();
+  $('#go').onclick = () => { const qs = pool(); if (!qs.length) return toast('先選至少一個科目'); duel(qs); };
 }
 function duel(qs) {
   const GOAL = 5, list = shuffle(qs), KEYS = ['1234', '7890'], OKK = ['5', '-'];
@@ -873,7 +1020,7 @@ function duel(qs) {
   document.body.classList.add('playing');
   app.innerHTML = `<div class="duel"><div class="dbar"><a href="#/duel" class="hx">✕</a><span>🟥</span><div class="track"><i id="orb">⚡</i></div><span>🟦</span><b class="timer" id="dt">${left}</b></div>
     <div class="dsides"><div class="dside a" id="d0"></div><div class="dmid" id="dmid" hidden><button class="btn pulse" id="dnx">下一題 →</button></div><div class="dside b" id="d1"></div></div></div>`;
-  const cq = () => list[qi % list.length];
+  const cq = () => list[qi];                       // 每題只出一次；題目出完就比誰的球推得遠
   const side = k => { const q = cq(); opts[k] = shuffle([q.right, ...q.wrongs]);
     $('#d' + k).innerHTML = `<div class="dq">${esc(q.q)}</div>${opts[k].map((o, i) => `<button class="opt" data-k="${k}" data-i="${i}"><span class="k">${KEYS[k][i]}</span><span class="ot">${esc(o)}</span></button>`).join('')}<button class="btn dcf" data-k="${k}" disabled>先選答案</button><div class="dmsg" id="m${k}" aria-live="polite"></div>`; };
   const orb = () => { $('#orb').style.left = (50 + pos * 45 / GOAL) + '%'; };
@@ -891,7 +1038,7 @@ function duel(qs) {
         : picks[k] >= 0 ? '<b class="no">✘ 你答錯了，對手答對了。</b>看看每個選項的說明。'
         : '對手先答對了。看看每個選項的說明。';
     });
-    $('#dnx').textContent = Math.abs(pos) >= GOAL ? '查看結果 →' : '下一題 →'; $('#dmid').hidden = false;
+    $('#dnx').textContent = Math.abs(pos) >= GOAL || qi + 1 >= list.length ? '查看結果 →' : '下一題 →'; $('#dmid').hidden = false;
   };
   const choose = (k, i) => {                     // 第一步：點選答案（還可以改）
     if (over || solved || out[k] || i < 0 || i >= opts[k].length) return;
@@ -907,7 +1054,7 @@ function duel(qs) {
     $('#m' + k).innerHTML = `<b class="no">✘ 「${esc(o)}」不對</b>：${esc(whyOf(q, o))}<br><span class="mute">這題你不能再答了，換對手作答。</span>`;
     if (out[0] && out[1]) solve(-1);
   };
-  $('#dnx').onclick = () => { if (over || !solved) return; if (Math.abs(pos) >= GOAL) return end(pos > 0 ? 0 : 1); qi++; draw(); };
+  $('#dnx').onclick = () => { if (over || !solved) return; if (Math.abs(pos) >= GOAL) return end(pos > 0 ? 0 : 1); if (++qi >= list.length) return end(pos > 0 ? 0 : pos < 0 ? 1 : 2); draw(); };
   $('.dsides').onclick = e => { const c = e.target.closest('.dcf'); if (c) return hit(+c.dataset.k); const b = e.target.closest('.opt'); if (b) choose(+b.dataset.k, +b.dataset.i); };
   document.onkeydown = e => {
     if (e.key === 'Enter') { if (solved) { e.preventDefault(); $('#dnx').click(); } return; }
@@ -942,11 +1089,11 @@ function viewMe() {
   const p = P();
   const rows = SUBJECTS.map(s => {
     const got = s.units.reduce((n, u) => n + stars(u.id), 0), lit = s.units.filter(u => stars(u.id) === 3).length;
-    const wr = Object.keys(p.wrong).filter(id => QS[id] && QS[id].sid === s.id).length;
-    return `<tr><td>${s.icon} ${esc(s.name)}</td><td>${lit} / ${s.units.length}</td><td>★ ${got} / ${s.units.length * 3}</td><td>${wr}</td></tr>`;
+    const wr = Object.keys(p.wrong).filter(id => QS[id] && QS[id].sid === s.id).length, wk = s.units.filter(u => weak(u.id).lv === 3).length;
+    return `<tr><td>${s.icon} ${esc(s.name)}</td><td>${lit} / ${s.units.length}</td><td>★ ${got} / ${s.units.length * 3}</td><td>${wr}</td><td>${wk ? `<a href="#/review/${s.id}">🔴 ${wk} 章</a>` : '—'}</td></tr>`;
   }).join('');
   app.innerHTML = heroHTML() + `<h1>我的進度</h1>
-    <div class="panel"><table><tr><th>星系</th><th>點亮星球</th><th>能量核心</th><th>錯題</th></tr>${rows}</table></div>
+    <div class="panel tscroll"><table><tr><th>星系</th><th>點亮星球</th><th>能量核心</th><th>錯題</th><th>待加強</th></tr>${rows}</table></div>
     <h2>🛠 機庫（用星塵換太空船）</h2><div class="panel hangar">${SHIPS.map(([e, cost]) => { const own = p.ships.includes(e);
       return `<button class="shipb ${p.ship === e ? 'on' : ''}" data-ship="${e}" data-cost="${cost}"><span>${e}</span><small>${p.ship === e ? '使用中' : own ? '點擊使用' : cost + ' ✨'}</small></button>`; }).join('')}</div>
     <h2>切換／新增使用者</h2><div class="panel row">
@@ -973,14 +1120,15 @@ function viewMe() {
 function route() {
   RUN++; stopTimer(); document.onkeydown = null;
   const [, r, a, b] = location.hash.split('/');
-  const nav = ['s', 'u', 'play', 'mix', 'learn', 'quiz', 'sprint'].includes(r) ? 'home' : (r || 'home');
+  const nav = ['s', 'u', 'play', 'mix', 'learn', 'quiz', 'sprint'].includes(r) ? 'home' : r === 'train' ? 'review' : (r || 'home');
   $$('[data-nav]').forEach(n => { const on = n.dataset.nav === nav; n.classList.toggle('on', on); if (on) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current'); });
-  document.body.classList.toggle('playing', ['play', 'learn', 'quiz', 'mix'].includes(r));
+  document.body.classList.toggle('playing', ['play', 'learn', 'quiz', 'mix', 'train'].includes(r));
   window.__repark = null;
   const wn = Object.keys(P().wrong).filter(id => QS[id]).length, wb = $('#wbadge'); if (wb) { wb.textContent = wn > 99 ? '99+' : wn; wb.hidden = !wn; }
   if (r === 's') viewSubject(a); else if (r === 'u') viewUnit(a); else if (r === 'play') play(a, b || 'all');
   else if (r === 'learn') play(a, 'all'); else if (r === 'quiz') play(a, 'b');
   else if (r === 'mix') viewMix(a); else if (r === 'sprint') viewSprint(); else if (r === 'duel') viewDuel();
+  else if (r === 'review') viewReview(a); else if (r === 'train') viewTrain(decodeURIComponent(a || '').split(','));
   else if (r === 'codex') viewCodex(a); else if (r === 'wrong') viewWrong(); else if (r === 'me') viewMe(); else viewHome();
   window.scrollTo(0, 0);
 }
