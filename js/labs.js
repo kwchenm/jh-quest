@@ -1,6 +1,7 @@
 /* 互動實驗室：動手調整 → 觀察變化 → 完成任務
    每個實驗以單元代號為 key。純邏輯（view 回傳字串），瀏覽器與 Node 都能載入測試。
-   mission：{t 任務, set 進入時設定, ok 是否達成, say 完成後的說明, sol 解法（測試用）, hint 提示} */
+   mission：{t 任務, set 進入時設定, ok 是否達成, say 說明, sol 正確答案（答錯時拿來公布）, hint 提示, why 答錯時的原因（可省略）}
+   孩子做好之後要按「確定作答」才判定，每個任務只有一次機會；判定後 s.judged = true，畫面可以顯示結果。 */
 (function (G) {
 'use strict';
 const L = G.LABS = {};
@@ -670,14 +671,20 @@ L.en9b1 = machine('關係代名詞放大鏡', '想多介紹一下前面的名詞
 
 /* ======================= 國文 ======================= */
 const TYPO = [['他做事總是按步就班，遇到難題也不會一愁莫展。', { 步: '部', 愁: '籌' }], ['哥哥金榜提名，全家人都迫不急待想幫他慶祝。', { 提: '題', 急: '及' }], ['兩位老朋友談笑風聲，輸的人也甘敗下風。', { 聲: '生', 敗: '拜' }]];
+const typoAt = i => [...TYPO[i][0]].map((c, k) => TYPO[i][1][c] ? k : -1).filter(k => k >= 0);
+const marked = s => Object.keys(s.mark).filter(k => s.mark[k]).map(Number).sort((a, b) => a - b);
 L.ch7a1 = {
-  name: '錯字獵人', intro: '迷霧怪把句子裡的字偷偷換掉了！**點出寫錯的字**，把它修好。每句有 2 個錯字。',
-  init: () => ({ i: 0, found: {}, msg: '' }),
-  view: s => { const [t, w] = TYPO[s.i]; return '<div class="typo">' + [...t].map((c, k) => w[c] ? (s.found[c] ? `<span class="fix">${w[c]}</span>` : `<span data-tap="${k}">${c}</span>`) : `<span data-tap="${k}">${c}</span>`).join('') + '</div>' + (s.msg ? `<p class="labnote"><b>${s.msg}</b></p>` : ''); },
-  read: s => [['已修好', Object.keys(s.found).length + ' / 2']],
-  tap: (s, id) => { const c = [...TYPO[s.i][0]][+id]; if (TYPO[s.i][1][c]) { s.found[c] = 1; s.msg = `「${c}」→「${TYPO[s.i][1][c]}」修好了！`; } else s.msg = `「${c}」沒有寫錯喔，再找找。`; },
-  missions: TYPO.map((x, i) => M('找出這句話裡的 2 個錯字', s => { s.i = i; s.found = {}; s.msg = ''; }, s => Object.keys(s.found).length === 2,
-    ['**按部就班**（按照部門次序）、**一籌莫展**（籌是竹籌，想不出辦法）。', '**金榜題名**（把名字題在榜上）、**迫不及待**（來不及等）。', '**談笑風生**（氣氛生動）、**甘拜下風**（拜服對方）。'][i], s => { Object.keys(x[1]).forEach(c => s.found[c] = 1); }, '看看成語裡的字，想想它的意思。'))
+  name: '錯字獵人', intro: '迷霧怪把句子裡的字偷偷換掉了！每句有 2 個錯字。**點字把它圈起來**（再點一次取消），圈好 2 個再按「確定作答」。',
+  init: () => ({ i: 0, mark: {} }),
+  view: s => { const [t, w] = TYPO[s.i]; return '<div class="typo">' + [...t].map((c, k) => !s.judged ? `<span data-tap="${k}" class="${s.mark[k] ? 'mk' : ''}">${c}</span>`
+    : w[c] ? `<span class="fix">${w[c]}</span>` : `<span class="${s.mark[k] ? 'wr' : 'pl'}">${c}</span>`).join('') + '</div>'; },
+  read: s => [['已圈起來', marked(s).length + ' 個字（要找 2 個）']],
+  tap: (s, id) => { s.mark[id] = !s.mark[id]; },
+  missions: TYPO.map((x, i) => Object.assign(M('找出這句話裡的 2 個錯字，把它們圈起來', s => { s.i = i; s.mark = {}; }, s => marked(s).join() === typoAt(i).join(),
+    ['**按部就班**（按照部門次序）、**一籌莫展**（籌是竹籌，想不出辦法）。', '**金榜題名**（把名字題在榜上）、**迫不及待**（來不及等）。', '**談笑風生**（氣氛生動）、**甘拜下風**（拜服對方）。'][i],
+    s => { s.mark = Object.fromEntries(typoAt(i).map(k => [k, true])); }, '看看成語裡的字，想想它的意思。'),
+    { why: s => { const ch = [...x[0]], m = marked(s);
+      return [...m.filter(k => !x[1][ch[k]]).map(k => `「${ch[k]}」沒有寫錯`), ...typoAt(i).filter(k => !s.mark[k]).map(k => `漏掉了「${ch[k]}」，應該寫成「${x[1][ch[k]]}」`)].join('；') + '。'; } }))
 };
 
 const COMBO = { '氵工': ['江', '形聲', '「氵」表示和水有關（形符），「工」表示讀音（聲符）'], '氵可': ['河', '形聲', '「氵」表意，「可」表音'], '日月': ['明', '會意', '太陽和月亮合在一起，非常明亮'], '人木': ['休', '會意', '人靠在樹旁休息'], '木木': ['林', '會意', '兩棵樹在一起，成了樹林'] };

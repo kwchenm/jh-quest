@@ -212,12 +212,12 @@ function gameKind(u, g) {
   return g.pairs.length > 5 ? 'link' : (parseInt(hash(u.id), 36) % 2 ? 'memory' : 'bubbles');
 }
 const GK = {
-  meteor: {ic: '☄️', name: '隕石攔截', ask: g => (g.ask || '') + ' 隕石落地前，點下面正確的類別把它擊碎！', run: gMeteor},
-  stars: {ic: '✨', name: '連星座', ask: g => (g.ask || '依正確順序點亮星星。') + ' 連成一個星座！', run: gStars},
-  sentence: {ic: '🧩', name: '拼句子', ask: g => g.ask || '依正確順序點選。', run: gSentence},
-  memory: {ic: '🃏', name: '記憶翻牌', ask: () => '一次翻兩張牌，把「名詞」和「它的說明」配成一對。記住牌的位置！', run: gMemory},
-  bubbles: {ic: '🫧', name: '泡泡射擊', ask: () => '看上方的目標，戳破和它相配的泡泡！', run: gBubbles},
-  link: {ic: '🔗', name: '連連看', ask: () => '先點左邊，再點右邊相配的卡片。', run: gLink}
+  meteor: {ic: '☄️', name: '隕石攔截', ask: g => (g.ask || '') + ' 點下面的類別瞄準，再按「發射」擊碎隕石。每顆只有一次機會！', run: gMeteor},
+  stars: {ic: '✨', name: '連星座', ask: g => (g.ask || '依正確順序點亮星星。') + ' 連成一個星座，排好再按「確定作答」。', run: gStars},
+  sentence: {ic: '🧩', name: '拼句子', ask: g => (g.ask || '依正確順序點選。') + ' 排好再按「確定作答」。', run: gSentence},
+  memory: {ic: '🃏', name: '記憶翻牌', ask: () => '先記住每張說明牌的位置，蓋牌後依照題目找出對的那一張，選好再按「翻開它」。每張只有一次機會！', run: gMemory},
+  bubbles: {ic: '🫧', name: '泡泡射擊', ask: () => '看上方的目標，點和它相配的泡泡瞄準，再按「發射」。每個目標只有一次機會！', run: gBubbles},
+  link: {ic: '🔗', name: '連連看', ask: () => '先點左邊，再點右邊相配的卡片，全部配好再按「確定作答」。', run: gLink}
 };
 function viewUnit(uid) {
   const u = UNITS[uid]; if (!u) return viewHome();
@@ -303,14 +303,14 @@ function stepDialog(box, x, done) {
   draw();
 }
 
-/* --- 步驟：實驗室（動手調整，達成任務就自動過關） --- */
+/* --- 步驟：實驗室（動手做 → 按「確定作答」才判定，每個任務只有一次機會） --- */
 function stepLab(box, x, done) {
-  const lab = LABS[x.u.id], s = lab.init(); let mi = 0, acts = 0, solved = false;
+  const lab = LABS[x.u.id], s = lab.init(); let mi = 0, acts = 0, judged = false, missed = 0;
   const cur = () => lab.missions[mi];
   const txt = v => typeof v === 'function' ? v(s) : v;
   const ctrls = () => typeof lab.ctrl === 'function' ? lab.ctrl(s) : (lab.ctrl || []);
   const fv = c => c.fmt ? c.fmt(s[c.k]) : s[c.k];
-  const enter = () => { acts = 0; solved = false; s.mi = mi; if (cur().set) cur().set(s); };
+  const enter = () => { acts = 0; judged = false; s.judged = false; s.right = false; s.mi = mi; if (cur().set) cur().set(s); };
   const ctrlHTML = () => ctrls().map((c, i) => {
     if (c.type === 'btn') return `<button class="lbtn" data-b="${i}">${esc(c.label)}</button>`;
     if (c.type === 'toggle') return `<button class="lbtn tog ${s[c.k] ? 'on' : ''}" data-t="${i}" aria-pressed="${!!s[c.k]}">${s[c.k] ? '✅' : '⬜'} ${esc(c.label)}</button>`;
@@ -323,41 +323,60 @@ function stepLab(box, x, done) {
       ${mi === 0 ? say(x.s, lab.intro) : ''}
       <div class="mis" id="lm">🎯 ${md(cur().t)}</div>
       <div class="labview" id="lv">${lab.view(s)}</div><div class="reads" id="lr">${readHTML()}</div><div class="ctrls" id="lc">${ctrlHTML()}</div>
-      <div id="lf" aria-live="polite"></div><div class="row c" id="la"><button class="btn ghost" id="lhint">💡 給我提示</button></div></div>`;
+      <div id="lf" aria-live="polite"></div>
+      <div class="row c" id="la"><button class="btn ghost" id="lhint">💡 給我提示</button><button class="btn" id="lok" disabled>先動手做，再按確定</button></div>
+      <p class="mute sm c" id="lrule">做好之後按「確定作答」才會判定，每個任務只有一次機會。</p></div>`;
   };
   const refresh = full => { $('#lv', box).innerHTML = lab.view(s); $('#lr', box).innerHTML = readHTML(); if (full) $('#lc', box).innerHTML = ctrlHTML(); };
-  const check = () => {
-    if (solved) return;
-    const m = cur();
-    if (!m.ok(s)) { if (++acts === 5) { const h = $('#lhint', box); if (h) h.classList.add('pulse'); } return; }
-    solved = true; sfx.ok();
-    $('#lm', box).classList.add('done');
-    $('#lf', box).innerHTML = `<div class="exp good pop"><b class="ok">✔ 任務完成！</b><br>${md(txt(m.say))}</div>`;
-    $('#la', box).innerHTML = `<button class="btn pulse" id="lnext">${mi + 1 < lab.missions.length ? '下一個任務 →' : '完成實驗 🎉'}</button>`;
-    const n = $('#lnext', box); if (n && n.scrollIntoView && !window.__fast) n.scrollIntoView({behavior: 'smooth', block: 'center'});
+  const acted = () => { acts++; const b = $('#lok', box); if (b && b.disabled) { b.disabled = false; b.textContent = '確定作答 ✔'; } };
+  const mine = () => {                             // 孩子的答案（答錯時拿來對照）
+    const c = ctrls().filter(c => c.type !== 'btn').map(c => c.type === 'toggle' ? (s[c.k] ? '✅' + c.label : '')
+      : c.type === 'choice' ? `${c.label}：${(c.opts.find(o => o[0] === s[c.k]) || ['', s[c.k]])[1]}` : `${c.label}：${fv(c)}${c.unit || ''}`).filter(Boolean);
+    return c.length ? c.join('　') : (lab.read ? lab.read(s) : []).slice(0, 2).map(r => `${r[0]}：${r[1]}`).join('　');
   };
-  const hint = () => { const h = cur().hint; $('#lf', box).innerHTML = `<div class="exp pop">💡 ${h ? md(txt(h)) : '仔細看上面的讀數，想想任務要你做到什麼。'}</div>`; const b = $('#lhint', box); if (b) b.classList.remove('pulse'); };
+  const judge = () => {
+    if (judged || !acts) return;
+    const m = cur(), ok = !!m.ok(s);
+    let html;
+    if (ok) { sfx.ok(); html = `<b class="ok">✔ 答對了！</b><br>${md(txt(m.say))}`; }
+    else {
+      sfx.no(); missed++;
+      const my = mine(), why = m.why ? txt(m.why) : m.hint ? txt(m.hint) : '';
+      if (m.set) m.set(s); m.sol(s);              // 公布正確答案：畫面換成正確的樣子
+      html = `<b class="no">✘ 這樣還不對。</b>${my ? `<br>你的答案：${my}` : ''}${why ? `<br>${m.why ? '原因' : '怎麼想'}：${md(why)}` : ''}<br><b>正確答案</b>（畫面已經換成正確的樣子）：${md(txt(m.say))}`;
+    }
+    judged = true; s.judged = true; s.right = ok;
+    refresh(true);
+    $('.lab', box).classList.add('judged'); $('#lm', box).classList.add(ok ? 'done' : 'miss');
+    $('#lf', box).innerHTML = note(html, ok);
+    $('#la', box).innerHTML = ''; const r = $('#lrule', box); if (r) r.remove();
+    nextBtn($('#la', box), mi + 1 < lab.missions.length ? '下一個任務 →' : '完成實驗 🎉', !ok, next);
+    const n = $('#nx', box); if (n && n.scrollIntoView && !window.__fast) n.scrollIntoView({behavior: 'smooth', block: 'center'});
+  };
+  const next = () => { if (++mi >= lab.missions.length) { earn(x, 15, missed ? 5 : 10); bump('game'); return done(); } enter(); draw(); window.scrollTo(0, 0); };
+  const hint = () => { if (judged) return; const h = cur().hint; $('#lf', box).innerHTML = `<div class="exp pop">💡 ${h ? md(txt(h)) : '仔細看上面的讀數，想想任務要你做到什麼。'}</div>`; };
   const setVal = (c, i, v) => { s[c.k] = v; const el = $(`[data-val="${i}"]`, box); if (el) el.textContent = fv(c); };
-  box.oninput = e => { const i = e.target.dataset.s; if (i === undefined) return; setVal(ctrls()[+i], i, +e.target.value); refresh(false); };
-  box.onchange = e => { if (e.target.dataset.s !== undefined) check(); };
+  box.oninput = e => { if (judged) return; const i = e.target.dataset.s; if (i === undefined) return; setVal(ctrls()[+i], i, +e.target.value); refresh(false); };
+  box.onchange = e => { if (!judged && e.target.dataset.s !== undefined) acted(); };
   box.onclick = e => {
     const t = e.target;
     if (t.closest('#lhint')) return hint();
-    if (t.closest('#lnext')) { if (++mi >= lab.missions.length) { earn(x, 15, 10); bump('game'); return done(); } enter(); draw(); return window.scrollTo(0, 0); }
+    if (t.closest('#lok')) return judge();
+    if (judged) return;
     const tap = t.closest('[data-tap]');
-    if (tap && lab.tap) { lab.tap(s, tap.dataset.tap); sfx.tap(); refresh(false); return check(); }
+    if (tap && lab.tap) { lab.tap(s, tap.dataset.tap); sfx.tap(); refresh(false); return acted(); }
     const nb = t.closest('.nud');
     if (nb) { const i = +nb.dataset.n, c = ctrls()[i], st = c.step || 1;
       const v = Math.min(c.max, Math.max(c.min, Math.round((s[c.k] + st * nb.dataset.d) / st) * st));
-      setVal(c, i, +v.toFixed(4)); const r = $(`[data-s="${i}"]`, box); if (r) r.value = s[c.k]; sfx.tap(); refresh(false); return check(); }
+      setVal(c, i, +v.toFixed(4)); const r = $(`[data-s="${i}"]`, box); if (r) r.value = s[c.k]; sfx.tap(); refresh(false); return acted(); }
     const b = t.closest('.lbtn'); if (!b) return;
     const cs = ctrls();
     if (b.dataset.b !== undefined) cs[+b.dataset.b].run(s);
     else if (b.dataset.t !== undefined) { const c = cs[+b.dataset.t]; s[c.k] = !s[c.k]; if (c.run) c.run(s); }
     else if (b.dataset.c !== undefined) { const c = cs[+b.dataset.c]; s[c.k] = c.opts[+b.dataset.j][0]; }
-    sfx.tap(); refresh(true); check();
+    sfx.tap(); refresh(true); acted();
   };
-  if (window.__fast) window.__lab = {s, lab, mi: () => mi, check};
+  if (window.__fast) window.__lab = {s, lab, mi: () => mi, act: acted, judge, judged: () => judged};
   enter(); draw();
 }
 
@@ -389,52 +408,60 @@ function nextBtn(el, label, wait, fn) {         // 答錯時按鈕先鎖 1.5 秒
 }
 const gsay = (box, html, good) => { const f = $('#gf', box); if (f) f.innerHTML = note(html, good); };
 
-/* --- 步驟：修復知識碎片（關鍵字被迷霧偷走） --- */
+/* --- 步驟：修復知識碎片（關鍵字被迷霧偷走：全部填好再按「確定作答」，只有一次機會） --- */
 function stepRestore(box, x, done, c) {
   const segs = c.b.split(/(\*\*.+?\*\*)/).filter(Boolean).map(t => t.startsWith('**') ? {k: t.slice(2, -2)} : {t});
   const uniq = [...new Set(segs.filter(g => g.k && g.k.length <= 14).map(g => g.k))];
   if (uniq.length < 2) return stepQuick(box, x, done, c);
   const pick = shuffle(uniq).slice(0, Math.min(4, uniq.length)), used = new Set(), blanks = [];
   segs.forEach(g => { if (g.k && pick.includes(g.k) && !used.has(g.k)) { used.add(g.k); g.blank = blanks.length; blanks.push(g.k); } });
-  const tiles = shuffle([...blanks, ...shuffle(x.terms.filter(t => !pick.includes(t) && t.length <= 14)).slice(0, 2)]).map(t => ({t, used: false}));
-  let bi = 0, miss = 0, wrongHere = 0, hold = false, msg = '';
+  const tiles = shuffle([...blanks, ...shuffle(x.terms.filter(t => !pick.includes(t) && t.length <= 14)).slice(0, 2)]).map(t => ({t}));
+  const fill = blanks.map(() => -1);              // 每一格放了哪一張字卡
+  let cb = 0, judged = false;
   const br = t => esc(t).replace(/\n/g, '<br>');
+  const head = `<div class="le">${c.e || '📘'}</div><h2>${esc(c.t)}</h2>`;
+  const put = k => (tiles[fill[k]] || {t: '？'}).t;
   const text = fog => segs.map(g => g.t !== undefined ? br(g.t)
     : g.blank === undefined || !fog ? `<b>${esc(g.k)}</b>`
-    : g.blank < bi ? `<b class="got">${esc(g.k)}</b>`
-    : `<span class="blank ${g.blank === bi ? 'cur' : ''}" data-a="${esc(g.k)}">${g.blank === bi && wrongHere >= 2 ? esc(g.k[0]) + '…' : '？'}</span>`).join('');
-  const head = `<div class="le">${c.e || '📘'}</div><h2>${esc(c.t)}</h2>`;
+    : judged ? (put(g.blank) === g.k ? `<b class="got">${esc(g.k)}</b>` : `<span class="blank no" data-n="${g.blank + 1}"><s>${esc(put(g.blank))}</s> <b>${esc(g.k)}</b></span>`)
+    : `<span class="blank ${g.blank === cb ? 'cur' : ''} ${fill[g.blank] >= 0 ? 'full' : ''}" data-b="${g.blank}" data-n="${g.blank + 1}" data-a="${esc(g.k)}">${fill[g.blank] >= 0 ? esc(put(g.blank)) : '？'}</span>`).join('');
   const learn = () => {
     box.innerHTML = `<div class="lcard"><span class="tag">💎 知識碎片</span>${head}<div class="lb">${text(false)}</div></div>
       <div class="row c"><button class="btn" id="go">記住了！🌫️</button></div><p class="mute sm c">按下後，迷霧怪會偷走幾個關鍵字，看你能不能放回去</p>`;
     $('#go', box).onclick = () => { sfx.tap(); fog(); };
   };
   const fog = () => {
-    box.innerHTML = `<div class="lcard fogged"><span class="tag">🌫️ 迷霧來襲！把關鍵字放回去</span>${head}<div class="lb">${text(true)}</div></div>
-      <div class="tiles ${hold ? 'hold' : ''}">${tiles.map((t, k) => `<button class="tile2" data-k="${k}" ${t.used ? 'disabled' : ''}>${esc(t.t)}</button>`).join('')}</div>
-      <div aria-live="polite">${msg}</div><p class="mute sm c">點選正確的關鍵字，填進發亮的空格　失誤 ${miss}</p>`;
+    const full = fill.every(f => f >= 0);
+    box.innerHTML = (judged ? `<div class="lcard"><span class="tag">🔍 檢查結果：綠色是填對的，紅色是填錯的</span>` : `<div class="lcard fogged"><span class="tag">🌫️ 迷霧來襲！把關鍵字放回去</span>`) + `${head}<div class="lb">${text(true)}</div></div>` + (judged ? '' :
+      `<div class="tiles">${tiles.map((t, k) => `<button class="tile2" data-k="${k}" ${fill.includes(k) ? 'disabled' : ''}>${esc(t.t)}</button>`).join('')}</div>
+      <p class="mute sm c">點字卡放進發亮的空格；點已經填好的空格可以把字卡拿回來。全部填好再按「確定作答」，只有一次機會。</p>
+      <div class="row c cfrow"><button class="btn" id="cf" ${full ? '' : 'disabled'}>${full ? '確定作答 ✔' : '先把空格填滿'}</button></div>`) + '<div id="rf" aria-live="polite"></div>';
   };
-  const whyNot = t => {                          // 這個關鍵字為什麼不是這一格
-    if (blanks.includes(t)) return '它也是這段的關鍵字，但要填在後面的空格。讀讀發亮空格前後的句子。';
-    if (c.b.includes('**' + t + '**')) return '它已經出現在這段文字裡了（看看粗體字）。';
+  const whyNot = t => {                          // 這張字卡為什麼不是這一格
+    const j = blanks.indexOf(t);
+    if (j >= 0) return `「${esc(t)}」是第 ${j + 1} 格的答案。`;
+    if (c.b.includes('**' + t + '**')) return `「${esc(t)}」已經出現在這段文字裡了（看看粗體字）。`;
     const home = x.L.cards.find(o => o !== c && o.b.includes('**' + t + '**'));
-    return home ? `它屬於〈${esc(home.t)}〉那一段的內容，跟這句話無關。` : '它不屬於這一段。';
+    return home ? `「${esc(t)}」屬於〈${esc(home.t)}〉那一段，跟這句話無關。` : `「${esc(t)}」不屬於這一段。`;
+  };
+  const judge = () => {
+    judged = true;
+    const bad = blanks.map((a, k) => put(k) === a ? '' : `第 ${k + 1} 格你填了「${esc(put(k))}」：${whyNot(put(k))}這一格應該是「<b>${esc(a)}</b>」。`).filter(Boolean);
+    bad.length ? sfx.no() : sfx.ok(); fog();
+    $('#rf', box).innerHTML = note(bad.length ? `<b class="no">✘ 有 ${bad.length} 格填錯了</b><br>${bad.join('<br>')}` : '<b class="ok">✔ 全部填對了！</b>每個關鍵字都回到正確的位置。', !bad.length);
+    earn(x, 8, bad.length ? 3 : 6);
+    nextBtn($('#rf', box), '收進圖鑑 →', bad.length > 0, () => done());
   };
   box.onclick = e => {
-    const b = e.target.closest('.tile2'); if (!b || b.disabled || hold) return;
-    const t = tiles[+b.dataset.k];
-    if (t.t === blanks[bi]) {
-      t.used = true; bi++; wrongHere = 0; sfx.ok(); msg = note(`✔ 「${esc(t.t)}」放對了！`, true);
-      if (bi < blanks.length) return fog();
-      earn(x, 8, miss ? 3 : 6);
-      box.innerHTML = `<div class="lcard"><span class="tag">✨ 碎片修復完成${miss ? '' : '・零失誤'}</span>${head}<div class="lb">${text(false)}</div></div><div class="row c"><button class="btn pulse" id="go">收進圖鑑 →</button></div>`;
-      $('#go', box).onclick = () => done();
-    } else {
-      miss++; wrongHere++; sfx.no(); hold = true;
-      msg = note(`✘ 「${esc(t.t)}」不是這一格的答案。${whyNot(t.t)}${wrongHere >= 2 ? '<br>💡 發亮的空格已經提示了第一個字。' : ''}`);
-      fog(); const nb = $(`.tile2[data-k="${b.dataset.k}"]`, box); if (nb) bad(nb);
-      later(() => { hold = false; fog(); }, 1200);
-    }
+    if (judged) return;
+    if (e.target.closest('#cf')) { if (fill.every(f => f >= 0)) judge(); return; }
+    const bl = e.target.closest('.blank[data-b]');
+    if (bl) { const k = +bl.dataset.b; fill[k] = -1; cb = k; sfx.tap(); return fog(); }
+    const b = e.target.closest('.tile2'); if (!b || b.disabled) return;
+    if (cb < 0 || fill[cb] >= 0) cb = fill.indexOf(-1); if (cb < 0) return;
+    fill[cb] = +b.dataset.k; sfx.tap();
+    const nx = fill.findIndex((f, k) => f < 0 && k > cb); cb = nx >= 0 ? nx : fill.indexOf(-1);
+    fog();
   };
   learn();
 }
@@ -442,6 +469,7 @@ function stepQuick(box, x, done, c) {            // 關鍵字太少的卡片：�
   const head = `<div class="lcard"><span class="tag">💎 知識碎片</span><div class="le">${c.e || '📘'}</div><h2>${esc(c.t)}</h2><div class="lb">${md(c.b)}</div></div>`;
   if (!c.chk) { box.innerHTML = head + '<div class="row c"><button class="btn" id="go">收進圖鑑 →</button></div>'; $('#go', box).onclick = () => { earn(x, 8, 6); done(); }; return; }
   const q = chkQ(c), opts = shuffle([q.right, ...q.wrongs]); let pick = -1;
+  (x.seen = x.seen || []).push(q);                 // 記下來：Boss 戰會把相同的題目排到最後
   box.innerHTML = head + `<div class="chk"><div class="chkt">⚡ 快速確認：選好後按「確定作答」，只有一次機會</div><div class="qq">${esc(q.q)}</div>${optsHTML(opts, 'ABC')}${CONFIRM}<div id="qf" aria-live="polite"></div></div>`;
   box.onclick = e => {
     const b = e.target.closest('.opt');
@@ -454,31 +482,36 @@ function stepQuick(box, x, done, c) {            // 關鍵字太少的卡片：�
   };
 }
 
-/* --- 步驟：掃描（點光點收集資料 → 辨識測試） --- */
+/* --- 步驟：掃描（點光點收集資料 → 辨識測試：選好再按「確定作答」） --- */
 function stepScan(box, x, done, c) {
-  const items = c.flip, seen = new Set(); let phase = 0, tests = [], ti = 0, miss = 0, lastInfo = '', hold = false, msg = '';
+  const items = c.flip, seen = new Set(); let phase = 0, tests = [], ti = 0, miss = 0, lastInfo = '', pick = -1, judged = false;
   const order = shuffle(items.map((_, i) => i));
   const draw = () => {
-    const q = phase === 1 ? items[tests[ti]] : null;
+    const q = phase === 1 ? items[tests[ti]] : null, ans = tests[ti];
     box.innerHTML = `<div class="lcard"><span class="tag">📡 掃描任務</span><div class="le">${c.e || '📡'}</div><h2>${esc(c.t)}</h2><div class="lb">${md(c.b)}</div></div>
-      <div class="scan"><div class="scanh">${phase === 0 ? `點擊每個訊號源，收集資料（${seen.size} / ${items.length}）` : `🔎 辨識測試 ${ti + 1} / ${tests.length}：下面這段資料屬於哪一個訊號源？`}</div>
+      <div class="scan"><div class="scanh">${phase === 0 ? `點擊每個訊號源，收集資料（${seen.size} / ${items.length}）` : `🔎 辨識測試 ${ti + 1} / ${tests.length}：下面這段資料屬於哪一個訊號源？選好再按「確定作答」`}</div>
       ${q ? `<div class="sinfo ask">${md(q[1])}</div>` : ''}
-      <div class="orbs ${hold ? 'hold' : ''}">${order.map((i, k) => `<button class="orb2 ${seen.has(i) && phase === 0 ? 'seen' : ''}" data-i="${i}" style="--d:${-k * 0.7}s">${md(items[i][0])}</button>`).join('')}</div>
-      ${phase === 1 ? `<div aria-live="polite">${msg}</div>` : ''}
+      <div class="orbs">${order.map((i, k) => `<button class="orb2 ${phase === 0 && seen.has(i) ? 'seen' : ''} ${phase === 1 && !judged && i === pick ? 'sel' : ''} ${judged ? (i === ans ? 'right' : i === pick ? 'wrong' : 'dim') : ''}" data-i="${i}" ${judged ? 'disabled' : ''} style="--d:${-k * 0.7}s">${md(items[i][0])}</button>`).join('')}</div>
       ${phase === 0 ? `<div class="sinfo">${lastInfo || '👆 點上面發亮的訊號源'}</div>` : ''}
-      ${phase === 0 && seen.size === items.length ? '<div class="row c"><button class="btn pulse" id="go">資料收集完成，開始辨識 🔎</button></div>' : ''}</div>`;
-    const go = $('#go', box); if (go) go.onclick = () => { phase = 1; tests = shuffle(items.map((_, i) => i)).slice(0, Math.min(3, items.length)); ti = 0; sfx.tap(); draw(); };
+      ${phase === 0 && seen.size === items.length ? '<div class="row c"><button class="btn pulse" id="go">資料收集完成，開始辨識 🔎</button></div>' : ''}
+      ${phase === 1 && !judged ? `<div class="row c cfrow"><button class="btn" id="cf" ${pick < 0 ? 'disabled' : ''}>${pick < 0 ? '先選一個訊號源' : '確定作答 ✔'}</button></div>` : ''}
+      <div id="sf" aria-live="polite"></div></div>`;
+    const go = $('#go', box); if (go) go.onclick = () => { phase = 1; tests = shuffle(items.map((_, i) => i)).slice(0, Math.min(3, items.length)); ti = 0; pick = -1; sfx.tap(); draw(); };
   };
   box.onclick = e => {
-    const b = e.target.closest('.orb2'); if (!b || hold) return; const i = +b.dataset.i;
-    if (phase === 0) { seen.add(i); sfx.tap(); lastInfo = `<b>${md(items[i][0])}</b><br>${md(items[i][1])}`; return draw(); }
-    if (i === tests[ti]) { sfx.ok(); msg = note(`✔ 沒錯，剛才那段說的就是「${md(items[i][0])}」！`, true); if (++ti >= tests.length) { earn(x, 8, miss ? 3 : 6); return done(); } draw(); }
-    else {
-      miss++; sfx.no(); hold = true;
-      msg = note(`✘ 不是「${md(items[i][0])}」。它的資料是：${md(items[i][1])}<br>和上面那段不一樣，再比對看看。`);
-      draw(); const nb = $(`.orb2[data-i="${i}"]`, box); if (nb) bad(nb);
-      later(() => { hold = false; draw(); }, 1200);
+    if (phase === 1 && !judged && e.target.closest('#cf')) {
+      if (pick < 0) return;
+      judged = true; const ans = tests[ti], ok = pick === ans; if (!ok) miss++; ok ? sfx.ok() : sfx.no(); draw();
+      $('#sf', box).innerHTML = note(ok ? `<b class="ok">✔ 答對了！</b>這段資料說的就是「${md(items[ans][0])}」。`
+        : `<b class="no">✘ 不是「${md(items[pick][0])}」。</b>它的資料是：${md(items[pick][1])}<br>這段資料說的是「<b>${md(items[ans][0])}</b>」（綠色那個）。`, ok);
+      const last = ti + 1 >= tests.length;
+      return nextBtn($('#sf', box), last ? '完成辨識 →' : '下一題 →', !ok, () => { if (last) { earn(x, 8, miss ? 3 : 6); return done(); } ti++; pick = -1; judged = false; draw(); });
     }
+    const b = e.target.closest('.orb2'); if (!b || b.disabled) return; const i = +b.dataset.i;
+    if (phase === 0) { seen.add(i); sfx.tap(); lastInfo = `<b>${md(items[i][0])}</b><br>${md(items[i][1])}`; return draw(); }
+    if (judged) return;
+    pick = i; sfx.tap(); $$('.orb2', box).forEach(o => o.classList.toggle('sel', o === b));
+    const cf = $('#cf', box); if (cf) { cf.disabled = false; cf.textContent = '確定作答 ✔'; }
   };
   draw();
 }
@@ -487,6 +520,7 @@ function stepScan(box, x, done, c) {
 function stepGame(box, x, done) {
   const g = x.L.game, meta = GK[gameKind(x.u, g)];
   box.innerHTML = `<div class="gm"><div class="gmt">${meta.ic} ${esc(meta.name)}<small>${esc(g.title || '')}</small></div><p class="mute">${esc(meta.ask(g))}</p><div id="gb"></div></div>`;
+  if (window.__fast) window.__GK = GK;
   meta.run($('#gb', box), g, miss => {
     earn(x, 15, miss ? 10 : 20); bump('game'); sfx.win(); if (!miss) confetti();
     box.innerHTML = `<div class="panel result"><div class="big">${miss ? '🎮' : '💯'}</div><h1>${miss ? '試煉通過！' : '完美過關，零失誤！'}</h1><p>失誤 ${miss} 次</p>
@@ -494,109 +528,175 @@ function stepGame(box, x, done) {
     $('#go', box).onclick = () => done({miss});
   });
 }
-function gMemory(box, g, fin) {
-  const cards = shuffle(g.pairs.flatMap((p, i) => [{i, t: p[0]}, {i, t: p[1]}]));
-  let open = [], lock = false, left = g.pairs.length, flips = 0;
-  box.innerHTML = `<div class="mem">${cards.map((c, k) => `<button class="mc" data-k="${k}" data-p="${c.i}"><span class="mf">✦</span><span class="mb">${md(c.t)}</span></button>`).join('')}</div><p class="mute sm" id="gi">翻牌次數 0</p>`;
-  box.onclick = e => {
-    const b = e.target.closest('.mc'); if (!b || lock || b.classList.contains('on')) return;
-    b.classList.add('on'); sfx.tap(); open.push(b);
-    if (open.length < 2) return;
-    flips++; $('#gi', box).textContent = '翻牌次數 ' + flips;
-    const [a, c] = open; open = [];
-    if (a.dataset.p === c.dataset.p) { a.classList.add('ok'); c.classList.add('ok'); sfx.ok(); if (!--left) later(() => fin(Math.max(0, flips - g.pairs.length * 2)), 700); }
-    else { lock = true; sfx.no(); setTimeout(() => { a.classList.remove('on'); c.classList.remove('on'); lock = false; }, tm(1000)); }
+function gMemory(box, g, fin) {                  // 記憶翻牌：先記住說明牌的位置，蓋牌後依照題目找出對的那一張
+  const cards = shuffle(g.pairs.map((p, i) => ({i, t: p[1]}))), order = shuffle(g.pairs.map((_, i) => i)), solved = new Set();
+  let phase = 0, qi = 0, pick = -1, judged = false, miss = 0;
+  const draw = () => {
+    const want = order[qi];
+    box.innerHTML = (phase === 0 ? '<p class="mute c">先記住每張說明牌的位置，記好了就按「蓋牌」。</p>' : `<div class="btarget">🎯 找出「<b>${md(g.pairs[want][0])}</b>」的說明牌 <small>（${qi + 1} / ${order.length}）</small></div>`) +
+      `<div class="mem">${cards.map((c, k) => { const up = phase === 0 || solved.has(c.i) || (judged && (k === pick || c.i === want));
+        const cls = !up ? (k === pick ? 'sel' : '') : 'on' + (solved.has(c.i) || (judged && c.i === want) ? ' ok' : '') + (judged && k === pick && c.i !== want ? ' no' : '');
+        return `<button class="mc ${cls}" data-k="${k}" ${up || judged ? 'disabled' : ''}><span class="mf">✦</span><span class="mb">${md(c.t)}</span></button>`; }).join('')}</div>` +
+      (phase === 0 ? '<div class="row c"><button class="btn pulse" id="cover">記好了，蓋牌！🃏</button></div>' : judged ? '' : `<div class="row c cfrow"><button class="btn" id="cf" ${pick < 0 ? 'disabled' : ''}>${pick < 0 ? '先選一張牌' : '翻開它 ✔'}</button></div>`) +
+      `<div id="gf" aria-live="polite"></div><p class="mute sm" id="gi">失誤 ${miss}</p>`;
   };
+  box.onclick = e => {
+    if (e.target.closest('#cover')) { phase = 1; sfx.tap(); return draw(); }
+    if (phase === 0 || judged) return;
+    if (e.target.closest('#cf')) {
+      if (pick < 0) return;
+      judged = true; const want = order[qi], c = cards[pick], ok = c.i === want; if (!ok) miss++;
+      ok ? sfx.ok() : sfx.no(); draw();
+      gsay(box, ok ? `<b class="ok">✔ 找到了！</b>「${md(g.pairs[want][0])}」── ${md(g.pairs[want][1])}`
+        : `<b class="no">✘ 翻錯了。</b>這張是「${md(c.t)}」，那是「${md(g.pairs[c.i][0])}」的說明。<br>「${md(g.pairs[want][0])}」的說明是綠色那張：${md(g.pairs[want][1])}`, ok);
+      return nextBtn($('#gf', box), qi + 1 < order.length ? '下一張 →' : '完成 →', !ok, () => { solved.add(want); qi++; pick = -1; judged = false; if (qi >= order.length) return fin(miss); draw(); });
+    }
+    const b = e.target.closest('.mc'); if (!b || b.disabled) return;
+    pick = +b.dataset.k; sfx.tap(); $$('.mc', box).forEach(o => o.classList.toggle('sel', o === b));
+    const cf = $('#cf', box); if (cf) { cf.disabled = false; cf.textContent = '翻開它 ✔'; }
+  };
+  draw();
 }
 function gBubbles(box, g, fin) {
-  const order = shuffle(g.pairs.map((_, i) => i)); let qi = 0, miss = 0, hold = false;
-  box.innerHTML = `<div class="btarget">🎯 <b id="bt2"></b></div><div class="arena">${shuffle(g.pairs.map((p, i) => ({i, t: p[1]}))).map((b, k) => `<button class="bb" data-p="${b.i}" style="--t:${4 + k % 3}s;--d:${-k * 1.1}s">${md(b.t)}</button>`).join('')}</div><p class="mute sm" id="gi"></p><div id="gf" aria-live="polite"></div>`;
-  const show = () => { $('#bt2', box).innerHTML = md(g.pairs[order[qi]][0]); $('#gi', box).textContent = `還剩 ${order.length - qi} 個目標　失誤 ${miss}`; };
-  box.onclick = e => {
-    const b = e.target.closest('.bb'); if (!b || b.disabled || hold) return;
-    const p = +b.dataset.p, want = order[qi];
-    if (p === want) { b.disabled = true; b.classList.add('pop'); sfx.zap(); gsay(box, `✔ 「${md(g.pairs[p][0])}」── ${md(g.pairs[p][1])}`, true); if (++qi >= order.length) return later(() => fin(miss), 500); show(); }
-    else { miss++; sfx.no(); bad(b); hold = true; gsay(box, `✘ 這顆泡泡說的是「${md(g.pairs[p][0])}」，不是「${md(g.pairs[want][0])}」。`); show(); later(() => { hold = false; }, 900); }
+  const order = shuffle(g.pairs.map((_, i) => i)), bubbles = shuffle(g.pairs.map((p, i) => ({i, t: p[1]}))), gone = new Set();
+  let qi = 0, miss = 0, pick = -1, judged = false;
+  const draw = () => {
+    const want = order[qi];
+    box.innerHTML = `<div class="btarget">🎯 <b>${md(g.pairs[want][0])}</b> <small>（${qi + 1} / ${order.length}）</small></div><div class="arena">${bubbles.map((b, k) => gone.has(b.i) ? '' :
+      `<button class="bb ${!judged && k === pick ? 'sel' : ''} ${judged ? (b.i === want ? 'right' : k === pick ? 'wrong' : '') : ''}" data-k="${k}" ${judged ? 'disabled' : ''} style="--t:${4 + k % 3}s;--d:${-k * 1.1}s">${md(b.t)}</button>`).join('')}</div>` +
+      (judged ? '' : `<div class="row c cfrow"><button class="btn" id="cf" ${pick < 0 ? 'disabled' : ''}>${pick < 0 ? '先瞄準一顆泡泡' : '發射 ✔'}</button></div>`) +
+      `<div id="gf" aria-live="polite"></div><p class="mute sm" id="gi">失誤 ${miss}</p>`;
   };
-  show();
+  box.onclick = e => {
+    if (judged) return;
+    if (e.target.closest('#cf')) {
+      if (pick < 0) return;
+      judged = true; const want = order[qi], p = bubbles[pick].i, ok = p === want; if (!ok) miss++;
+      ok ? sfx.zap() : sfx.no(); draw();
+      gsay(box, ok ? `<b class="ok">✔ 命中！</b>「${md(g.pairs[want][0])}」── ${md(g.pairs[want][1])}`
+        : `<b class="no">✘ 打錯泡泡了。</b>這顆泡泡說的是「${md(g.pairs[p][0])}」，不是「${md(g.pairs[want][0])}」。<br>「${md(g.pairs[want][0])}」是綠色那顆：${md(g.pairs[want][1])}`, ok);
+      return nextBtn($('#gf', box), qi + 1 < order.length ? '下一個目標 →' : '完成 →', !ok, () => { gone.add(want); qi++; pick = -1; judged = false; if (qi >= order.length) return fin(miss); draw(); });
+    }
+    const b = e.target.closest('.bb'); if (!b || b.disabled) return;
+    pick = +b.dataset.k; sfx.tap(); $$('.bb', box).forEach(o => o.classList.toggle('sel', o === b));
+    const cf = $('#cf', box); if (cf) { cf.disabled = false; cf.textContent = '發射 ✔'; }
+  };
+  draw();
 }
 function gMeteor(box, g, fin) {
-  const items = shuffle(g.items); let i = 0, miss = 0, lock = false, idle = 0;
-  box.innerHTML = `<div class="sky" id="sky"></div><div class="bks n${g.buckets.length}">${g.buckets.map((b, k) => `<button class="bk" data-k="${k}">${md(b)}</button>`).join('')}</div><p class="mute sm" id="gi"></p><div id="gf" aria-live="polite"></div>`;
-  const sky = $('#sky', box), my = RUN, B = k => md(g.buckets[k]);
-  const info = () => { $('#gi', box).textContent = `還剩 ${items.length - i} 顆隕石　失誤 ${miss}`; };
+  const items = shuffle(g.items), B = k => md(g.buckets[k]); let i = 0, miss = 0, pick = -1, judged = false;
+  box.innerHTML = `<div class="sky" id="sky"></div><div class="bks n${g.buckets.length}">${g.buckets.map((b, k) => `<button class="bk" data-k="${k}">${md(b)}</button>`).join('')}</div>
+    <div class="row c cfrow"><button class="btn" id="cf" disabled>先選一個類別</button></div><div id="gf" aria-live="polite"></div><p class="mute sm" id="gi"></p>`;
+  const sky = $('#sky', box);
+  const info = () => { $('#gi', box).textContent = `第 ${i + 1} / ${items.length} 顆　失誤 ${miss}`; };
   const spawn = () => {
-    if (i >= items.length) return fin(miss);
-    if (idle >= 3) { sky.innerHTML = '<button class="btn" id="res">⏸ 點這裡繼續</button>'; $('#res', box).onclick = () => { idle = 0; spawn(); }; return; }
-    sky.innerHTML = `<div class="met" data-k="${items[i][1]}" style="animation-duration:${window.__fast ? 600 : Math.max(5.5, 9 - i * 0.4)}s"><i>☄️</i><span>${md(items[i][0])}</span></div>`;
-    sky.firstChild.onanimationend = () => { if (my !== RUN || lock) return; miss++; idle++; sfx.no(); gsay(box, `☄️ 隕石落地了！「${md(items[i][0])}」屬於「${B(items[i][1])}」。它稍後會再來一次。`); items.push(items[i]); i++; spawn(); };
+    pick = -1; judged = false; gsay(box, '');
+    $$('.bk', box).forEach(b => { b.classList.remove('sel', 'good', 'no'); b.disabled = false; });
+    const cf = $('#cf', box); cf.disabled = true; cf.textContent = '先選一個類別'; cf.parentNode.hidden = false;
+    sky.innerHTML = `<div class="met" style="animation-duration:${window.__fast ? 600 : Math.max(6, 10 - i * 0.4)}s"><i>☄️</i><span>${md(items[i][0])}</span></div>`;
+    sky.firstChild.onanimationend = () => { const m = $('.met', sky); if (m && !judged) m.classList.add('wait'); };   // 落到底就停住等你作答，不會自動跳過
     info();
   };
   box.onclick = e => {
-    const b = e.target.closest('.bk'), m = $('.met', sky); if (!b || lock || !m) return; idle = 0;
-    const it = items[i], k = +b.dataset.k;
-    if (k === it[1]) { lock = true; sfx.zap(); gsay(box, `✔ 「${md(it[0])}」屬於「${B(k)}」`, true); m.style.top = getComputedStyle(m).top; m.classList.add('boom'); b.classList.add('good'); later(() => { b.classList.remove('good'); lock = false; i++; spawn(); }, 420); }
-    else {                                       // 一顆隕石只有一次機會：答錯就公布正確類別，稍後再考一次
-      lock = true; miss++; sfx.no(); bad(b); m.style.animationPlayState = 'paused';
-      const r = $(`.bk[data-k="${it[1]}"]`, box); r.classList.add('good');
-      gsay(box, `✘ 「${md(it[0])}」屬於「${B(it[1])}」，不是「${B(k)}」。這顆隕石稍後會再來一次。`);
-      items.push(it); info();
-      later(() => { r.classList.remove('good'); lock = false; i++; spawn(); }, 2200);
-    }
+    if (judged) return;
+    const b = e.target.closest('.bk');
+    if (b) { pick = +b.dataset.k; sfx.tap(); $$('.bk', box).forEach(o => o.classList.toggle('sel', o === b)); const cf = $('#cf', box); cf.disabled = false; cf.textContent = '發射 ✔'; return; }
+    if (!e.target.closest('#cf') || pick < 0) return;
+    judged = true; const it = items[i], ok = pick === it[1], m = $('.met', sky);
+    if (m) { m.style.top = getComputedStyle(m).top; m.style.animationPlayState = 'paused'; m.classList.remove('wait'); }
+    $$('.bk', box).forEach(o => { o.disabled = true; o.classList.remove('sel'); });
+    $(`.bk[data-k="${it[1]}"]`, box).classList.add('good'); $('#cf', box).parentNode.hidden = true;
+    if (ok) { sfx.zap(); if (m) m.classList.add('boom'); } else { miss++; sfx.no(); $(`.bk[data-k="${pick}"]`, box).classList.add('no'); }
+    info();
+    gsay(box, ok ? `<b class="ok">✔ 擊碎！</b>「${md(it[0])}」屬於「${B(it[1])}」。` : `<b class="no">✘ 分錯類了。</b>「${md(it[0])}」屬於「${B(it[1])}」，不是「${B(pick)}」。`, ok);
+    nextBtn($('#gf', box), i + 1 < items.length ? '下一顆 →' : '完成 →', !ok, () => { if (++i >= items.length) return fin(miss); spawn(); });
   };
   spawn();
 }
 function gStars(box, g, fin) {
   const want = g.items, n = want.length, cols = n <= 4 ? 2 : 3, rows = Math.ceil(n / cols), slot = shuffle([...Array(n).keys()]);
-  let placed = 0, miss = 0, prev = null, hold = false;
-  box.innerHTML = `<div class="cons" style="height:${rows * 108 + 40}px"><svg class="cl"></svg>${want.map((t, k) => { const r = Math.floor(slot[k] / cols), c = slot[k] % cols; return `<button class="st2" data-k="${k}" style="left:${(c + 0.5) / cols * 100}%;top:${r * 108 + 8 + (c % 2 ? 24 : 0)}px"><i>✦</i><span>${md(t)}</span></button>`; }).join('')}</div><p class="mute sm" id="gi">失誤 0</p><div id="gf" aria-live="polite"></div>`;
-  const wrap = $('.cons', box), cl = $('.cl', box);
-  box.onclick = e => {
-    const b = e.target.closest('.st2'); if (!b || b.classList.contains('on') || hold) return;
-    const k = +b.dataset.k;
-    if (k !== placed) {
-      miss++; sfx.no(); bad(b); $('#gi', box).textContent = '失誤 ' + miss; hold = true;
-      gsay(box, `✘ 「${md(want[k])}」排在第 ${k + 1} 個。現在要找第 ${placed + 1} 個${placed ? `，也就是接在「${md(want[placed - 1])}」後面的那一個` : '，也就是最前面的那一個'}。`);
-      return later(() => { hold = false; }, 900);
-    }
-    gsay(box, `✔ 第 ${placed + 1} 個：「${md(want[placed])}」`, true);
-    b.classList.add('on'); $('i', b).textContent = placed + 1; sfx.ok();
-    const w = wrap.getBoundingClientRect(), r = b.getBoundingClientRect(), pt = [r.left - w.left + r.width / 2, r.top - w.top + 16];
-    if (prev) cl.insertAdjacentHTML('beforeend', `<line x1="${prev[0]}" y1="${prev[1]}" x2="${pt[0]}" y2="${pt[1]}"/>`);
-    prev = pt; if (++placed === n) later(() => fin(miss), 700);
+  let seq = [], judged = false;
+  const lines = ord => {                          // 依照順序把星星連起來
+    const wrap = $('.cons', box), cl = $('.cl', box); if (!wrap || ord.length < 2) return; const w = wrap.getBoundingClientRect();
+    const pt = k => { const r = $(`.st2[data-k="${k}"]`, box).getBoundingClientRect(); return [r.left - w.left + r.width / 2, r.top - w.top + 16]; };
+    cl.innerHTML = ord.slice(1).map((k, j) => { const a = pt(ord[j]), b = pt(k); return `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`; }).join('');
   };
+  const draw = () => {
+    box.innerHTML = `<div class="cons" style="height:${rows * 108 + 40}px"><svg class="cl"></svg>${want.map((t, k) => { const r = Math.floor(slot[k] / cols), c = slot[k] % cols, at = seq.indexOf(k);
+      const cls = judged ? (seq[k] === k ? 'on' : 'on no') : at >= 0 ? 'on' : '';
+      return `<button class="st2 ${cls}" data-k="${k}" ${judged ? 'disabled' : ''} style="left:${(c + 0.5) / cols * 100}%;top:${r * 108 + 8 + (c % 2 ? 24 : 0)}px"><i>${judged ? k + 1 : at >= 0 ? at + 1 : '✦'}</i><span>${md(t)}</span>${judged && seq[k] !== k ? `<em>你排第 ${at + 1}</em>` : ''}</button>`; }).join('')}</div>` +
+      (judged ? '' : `<p class="mute sm c">依照順序點星星；點最後一顆可以取消。全部排好再按「確定作答」。</p><div class="row c cfrow"><button class="btn" id="cf" ${seq.length === n ? '' : 'disabled'}>${seq.length === n ? '確定作答 ✔' : `還有 ${n - seq.length} 顆`}</button></div>`) +
+      '<div id="gf" aria-live="polite"></div>';
+    lines(judged ? want.map((_, k) => k) : seq);
+  };
+  const judge = () => {
+    judged = true; const bad = want.map((t, j) => seq[j] === j ? '' : `第 ${j + 1} 個應該是「${md(t)}」，你放了「${md(want[seq[j]])}」。`).filter(Boolean);
+    bad.length ? sfx.no() : sfx.ok(); draw();
+    gsay(box, bad.length ? `<b class="no">✘ 有 ${bad.length} 個位置排錯了</b><br>${bad.join('<br>')}<br>星座已經換成正確的順序。` : '<b class="ok">✔ 順序完全正確！</b>星座連起來了。', !bad.length);
+    nextBtn($('#gf', box), '完成 →', bad.length > 0, () => fin(bad.length));
+  };
+  box.onclick = e => {
+    if (judged) return;
+    if (e.target.closest('#cf')) { if (seq.length === n) judge(); return; }
+    const b = e.target.closest('.st2'); if (!b) return; const k = +b.dataset.k, at = seq.indexOf(k);
+    if (at >= 0) { if (at === seq.length - 1) { seq.pop(); sfx.tap(); draw(); } return; }
+    seq.push(k); sfx.tap(); draw();
+  };
+  draw();
 }
 function gSentence(box, g, fin) {
-  const want = g.items, pool = shuffle(want.map(t => ({t, used: false}))); let placed = 0, miss = 0, hold = false, msg = '';
-  const draw = () => { box.innerHTML = `<div class="sent">${want.map((t, k) => `<span class="w ${k < placed ? 'on' : ''}">${k < placed ? esc(t) : '＿'}</span>`).join('')}</div>
-    <div class="chips">${pool.map((p, k) => `<button class="chip2" data-k="${k}" ${p.used ? 'disabled' : ''}>${esc(p.t)}</button>`).join('')}</div><p class="mute sm">失誤 ${miss}</p><div id="gf" aria-live="polite">${msg}</div>`; };
+  const want = g.items, pool = shuffle(want.map(t => ({t}))); let seq = [], judged = false;
+  const draw = () => {
+    const allOk = judged && want.every((t, j) => pool[seq[j]].t === t);
+    box.innerHTML = `<div class="sent">${want.map((t, j) => j < seq.length ? `<span class="w ${judged ? (pool[seq[j]].t === t ? 'on' : 'no') : 'full'}" ${judged ? '' : `data-j="${j}"`}>${esc(pool[seq[j]].t)}</span>` : '<span class="w">＿</span>').join('')}</div>` +
+      (judged ? (allOk ? '' : `<div class="sent ans">${want.map(t => `<span class="w on">${esc(t)}</span>`).join('')}</div>`)
+        : `<div class="chips">${pool.map((p, k) => `<button class="chip2" data-k="${k}" ${seq.includes(k) ? 'disabled' : ''}>${esc(p.t)}</button>`).join('')}</div>
+        <p class="mute sm c">點字詞依序放進句子；點句子裡的字可以拿回來。排好再按「確定作答」。</p>
+        <div class="row c cfrow"><button class="btn" id="cf" ${seq.length === want.length ? '' : 'disabled'}>${seq.length === want.length ? '確定作答 ✔' : '先把句子排完'}</button></div>`) +
+      '<div id="gf" aria-live="polite"></div>';
+  };
+  const judge = () => {
+    judged = true; const bad = want.map((t, j) => pool[seq[j]].t === t ? '' : `第 ${j + 1} 個應該是「${esc(t)}」，你放了「${esc(pool[seq[j]].t)}」。`).filter(Boolean);
+    bad.length ? sfx.no() : sfx.ok(); draw();
+    gsay(box, bad.length ? `<b class="no">✘ 有 ${bad.length} 個位置放錯了</b><br>${bad.join('<br>')}<br>正確的句子在第二行。` : '<b class="ok">✔ 句子完全正確！</b>', !bad.length);
+    nextBtn($('#gf', box), '完成 →', bad.length > 0, () => fin(bad.length));
+  };
   box.onclick = e => {
-    const b = e.target.closest('.chip2'); if (!b || b.disabled || hold) return; const p = pool[+b.dataset.k];
-    if (p.t === want[placed]) { p.used = true; placed++; sfx.ok(); msg = ''; draw(); if (placed === want.length) later(() => fin(miss), 500); }
-    else {
-      miss++; sfx.no(); hold = true; const j = want.findIndex((w, k) => k >= placed && w === p.t);
-      msg = note(`✘ 「${esc(p.t)}」不是下一個${j >= 0 ? `，它要放在第 ${j + 1} 個位置` : ''}。${placed ? `想想「${esc(want[placed - 1])}」後面要接什麼。` : '想想句子要從哪裡開始。'}`);
-      draw(); const nb = $(`.chip2[data-k="${b.dataset.k}"]`, box); if (nb) bad(nb);
-      later(() => { hold = false; }, 900);
-    }
+    if (judged) return;
+    if (e.target.closest('#cf')) { if (seq.length === want.length) judge(); return; }
+    const w = e.target.closest('.w[data-j]'); if (w) { seq.splice(+w.dataset.j, 1); sfx.tap(); return draw(); }
+    const b = e.target.closest('.chip2'); if (!b || b.disabled) return; seq.push(+b.dataset.k); sfx.tap(); draw();
   };
   draw();
 }
 function gLink(box, g, fin) {
-  const n = g.pairs.length; let sel = null, left = n, miss = 0, hold = false;
-  const Ls = shuffle(g.pairs.map((p, i) => ({i, t: p[0]}))), Rs = shuffle(g.pairs.map((p, i) => ({i, t: p[1]})));
-  box.innerHTML = `<div class="mcols"><div class="mcol">${Ls.map(p => `<button class="tile" data-s="l" data-i="${p.i}">${md(p.t)}</button>`).join('')}</div>
-    <div class="mcol">${Rs.map(p => `<button class="tile r" data-s="r" data-i="${p.i}">${md(p.t)}</button>`).join('')}</div></div><p class="mute sm" id="gi">已配對 0 / ${n}　失誤 0</p><div id="gf" aria-live="polite"></div>`;
-  box.onclick = e => {
-    const b = e.target.closest('.tile'); if (!b || b.disabled || hold) return;
-    if (b.dataset.s === 'l') { $$('.tile[data-s=l]', box).forEach(t => t.classList.remove('sel')); b.classList.add('sel'); sel = b; sfx.tap(); return; }
-    if (!sel) return toast('先點左邊的卡片喔');
-    const li = +sel.dataset.i, ri = +b.dataset.i;
-    if (li === ri) { sel.classList.remove('sel'); sel.classList.add('done'); b.classList.add('done'); sel.disabled = b.disabled = true; sel = null; left--; sfx.ok(); gsay(box, `✔ 「${md(g.pairs[li][0])}」配「${md(g.pairs[li][1])}」`, true); }
-    else { miss++; sfx.no(); bad(sel); bad(b); hold = true; gsay(box, `✘ 「${md(g.pairs[ri][1])}」配的是「${md(g.pairs[ri][0])}」，不是「${md(g.pairs[li][0])}」。`); later(() => { hold = false; }, 1000); }
-    $('#gi', box).textContent = `已配對 ${n - left} / ${n}　失誤 ${miss}`;
-    if (!left) later(() => fin(miss), 500);
+  const n = g.pairs.length, Ls = shuffle(g.pairs.map((p, i) => ({i, t: p[0]}))), Rs = shuffle(g.pairs.map((p, i) => ({i, t: p[1]})));
+  const tag = i => 'ABCDEFGH'[Ls.findIndex(p => p.i === i)];
+  let sel = -1, pair = {}, judged = false;          // pair[左邊 i] = 右邊 i
+  const owner = r => { const k = Object.keys(pair).find(l => pair[l] === r); return k === undefined ? -1 : +k; };
+  const draw = () => {
+    const cnt = Object.keys(pair).length;
+    box.innerHTML = `<div class="mcols"><div class="mcol">${Ls.map(p => `<button class="tile ${sel === p.i ? 'sel' : ''} ${judged ? (pair[p.i] === p.i ? 'okk' : 'no') : ''}" data-s="l" data-i="${p.i}" ${judged ? 'disabled' : ''}><span class="tb">${tag(p.i)}</span>${md(p.t)}</button>`).join('')}</div>
+      <div class="mcol">${Rs.map(p => { const o = judged ? p.i : owner(p.i); return `<button class="tile r ${judged ? (owner(p.i) === p.i ? 'okk' : 'no') : ''}" data-s="r" data-i="${p.i}" ${judged ? 'disabled' : ''}>${o >= 0 ? `<span class="tb">${tag(o)}</span>` : ''}${md(p.t)}</button>`; }).join('')}</div></div>` +
+      (judged ? '' : `<p class="mute sm c">先點左邊，再點右邊相配的卡片（配錯可以重新配）。全部配好再按「確定作答」。</p><div class="row c cfrow"><button class="btn" id="cf" ${cnt === n ? '' : 'disabled'}>${cnt === n ? '確定作答 ✔' : `已配對 ${cnt} / ${n}`}</button></div>`) +
+      '<div id="gf" aria-live="polite"></div>';
   };
+  const judge = () => {
+    judged = true; const bad = Ls.filter(p => pair[p.i] !== p.i).map(p => `「${md(p.t)}」應該配「${md(g.pairs[p.i][1])}」；你配的「${md(g.pairs[pair[p.i]][1])}」其實是在說「${md(g.pairs[pair[p.i]][0])}」。`);
+    bad.length ? sfx.no() : sfx.ok(); draw();
+    gsay(box, bad.length ? `<b class="no">✘ 有 ${bad.length} 組配錯了</b><br>${bad.join('<br>')}<br>右邊卡片的代號已經換成正確的配對。` : '<b class="ok">✔ 全部配對正確！</b>', !bad.length);
+    nextBtn($('#gf', box), '完成 →', bad.length > 0, () => fin(bad.length));
+  };
+  box.onclick = e => {
+    if (judged) return;
+    if (e.target.closest('#cf')) { if (Object.keys(pair).length === n) judge(); return; }
+    const b = e.target.closest('.tile'); if (!b) return; const i = +b.dataset.i;
+    if (b.dataset.s === 'l') { sel = sel === i ? -1 : i; sfx.tap(); return draw(); }
+    if (sel < 0) return toast('先點左邊的卡片喔');
+    const o = owner(i); if (o >= 0) delete pair[o];
+    pair[sel] = i; sel = -1; sfx.tap(); draw();
+  };
+  draw();
 }
 
 /* ---------- 戰鬥引擎（Boss／守護者／突襲／錯題） ---------- */
@@ -604,9 +704,11 @@ let timerId = null;
 const stopTimer = () => { if (timerId) { clearInterval(timerId); timerId = null; } };
 const FOES = ['👾', '🐙', '👹', '🤖', '🦑', '👻', '🦂', '🕷️'];
 function battle(box, cfg, done) {
-  const pool = shuffle(cfg.qs), N = Math.min(cfg.n || 8, pool.length), H = cfg.hearts || 3, dmg = Math.ceil(100 / N);
-  let queue = pool.slice(0, N), missed = [], cur = null, locked = true, over = false, paused = false;
-  const st = {hp: 100, hearts: H, combo: 0, maxCombo: 0, right: 0, total: 0, scan: cfg.timer ? 0 : 1, shield: cfg.timer ? 0 : 1, shieldOn: false, kills: 0, left: cfg.timer || 0};
+  const H = cfg.hearts || 3, pool = cfg.order ? cfg.qs.slice() : shuffle(cfg.qs);
+  const total = cfg.timer ? pool.length : Math.min(pool.length, (cfg.n || 8) + H - 1);  // 每題只問一次
+  const K = cfg.timer ? Infinity : Math.max(1, total - (H - 1)), dmg = 100 / K;            // 打倒迷霧獸需要命中 K 次
+  let queue = pool.slice(0, total), cur = null, locked = true, over = false, paused = false;
+  const st = {hp: 100, dealt: 0, hearts: H, combo: 0, maxCombo: 0, right: 0, total: 0, scan: cfg.timer ? 0 : 1, shield: cfg.timer ? 0 : 1, shieldOn: false, kills: 0, left: cfg.timer || 0};
   const Q = s => box.querySelector(s);
   box.innerHTML = `<div class="bt" id="bt">
     <div class="foe" id="foe"><div class="fe" id="fe">${cfg.e}</div><div class="finfo"><div class="fname">${esc(cfg.name)}</div>${cfg.timer ? `<div class="timer" id="tm">${st.left}</div>` : '<div class="hpb"><i id="hp"></i></div>'}</div></div>
@@ -616,7 +718,7 @@ function battle(box, cfg, done) {
   const hud = () => {
     if (cfg.timer) Q('#kills').textContent = '擊退 ' + st.kills + ' 隻';
     else {
-      Q('#hp').style.width = st.hp + '%';
+      st.hp = Math.max(0, 100 * (1 - st.dealt / K)); Q('#hp').style.width = st.hp + '%';
       Q('#hearts').textContent = '❤️'.repeat(Math.max(0, st.hearts)) + '🖤'.repeat(H - Math.max(0, st.hearts));
       Q('#sk1').textContent = '🔍 掃描 ×' + st.scan; Q('#sk1').disabled = !st.scan || locked;
       Q('#sk2').textContent = st.shieldOn ? '🛡️ 護盾啟動中' : '🛡️ 護盾 ×' + st.shield; Q('#sk2').disabled = !st.shield || st.shieldOn;
@@ -627,15 +729,15 @@ function battle(box, cfg, done) {
   const pop = t => { const d = document.createElement('span'); d.className = 'dmg'; d.textContent = t; Q('#foe').appendChild(d); setTimeout(() => d.remove(), 900); };
   const end = () => {
     if (over) return; over = true; locked = true; stopTimer(); document.onkeydown = null;
-    const win = cfg.timer ? true : st.hp <= 0;
+    const win = cfg.timer ? true : st.dealt >= K - 1e-9;
     if (win && !cfg.timer) { Q('#foe').classList.add('dead'); sfx.boom(); }
     later(() => done({win, hearts: Math.max(0, st.hearts), right: st.right, total: st.total, maxCombo: st.maxCombo, kills: st.kills}), win && !cfg.timer ? 950 : 350);
   };
   const ask = () => {
     if (over) return;
     paused = false;
-    if (cfg.timer ? st.left <= 0 : (st.hp <= 0 || st.hearts <= 0)) return end();
-    if (!queue.length) queue = shuffle(missed.length ? missed.splice(0) : pool).slice(0, N);
+    if (cfg.timer ? st.left <= 0 : (st.dealt >= K - 1e-9 || st.hearts <= 0)) return end();
+    if (!queue.length) return end();                // 題目都問過了：不會重複出題
     const q = queue.shift(), tf = !cfg.timer && q.wrongs.length >= 2 && Math.random() < 0.3;
     cur = {q, tf, pick: null}; locked = false;
     const u = cfg.tag && q.uid && UNITS[q.uid];
@@ -664,17 +766,17 @@ function battle(box, cfg, done) {
     let head;
     if (ok) {
       st.right++; st.combo++; st.maxCombo = Math.max(st.maxCombo, st.combo); st.kills++; bump('right');
-      const crit = st.combo >= 3, d = crit ? Math.round(dmg * 1.5) : dmg; st.hp = Math.max(0, st.hp - d);
+      const crit = st.combo >= 3, d = Math.round(dmg * (crit ? 1.5 : 1)); st.dealt += crit ? 1.5 : 1;
       sfx.zap(); fx('beam', 'fire'); fx('foe', 'hit'); pop(cfg.timer ? '💥' : crit ? '爆擊 −' + d : '−' + d);
       if (cfg.timer) Q('#fe').textContent = FOES[st.kills % FOES.length];
       head = `<b class="ok">✔ 答對了！${cfg.timer ? '擊退一隻迷霧怪' : crit ? '連擊爆擊！' : '命中！'}</b>`;
     } else {
-      st.combo = 0; missed.push(q); sfx.no(); fx('bt', 'shake');
-      if (st.shieldOn) { st.shieldOn = false; toast('🛡️ 護盾擋下了攻擊！'); } else if (!cfg.timer) st.hearts--;
+      st.combo = 0; sfx.no(); fx('bt', 'shake');
+      if (st.shieldOn) { st.shieldOn = false; st.dealt += 1; fx('foe', 'hit'); pop('🛡️ 反彈'); toast('🛡️ 護盾擋下攻擊，還把它反彈回去！'); } else if (!cfg.timer) st.hearts--;
       head = '<b class="no">✘ 答錯了，被反擊！</b>';
     }
     save(); hud();
-    const fin = cfg.timer ? st.left <= 0 : st.hp <= 0 || st.hearts <= 0;
+    const fin = cfg.timer ? st.left <= 0 || !queue.length : st.dealt >= K - 1e-9 || st.hearts <= 0 || !queue.length;
     Q('#after').innerHTML = note(head + why, ok);
     nextBtn(Q('#after'), fin ? '查看結果 →' : cfg.timer ? '下一隻 →' : '繼續戰鬥 →', !ok, ask);
   };
@@ -698,11 +800,19 @@ function battle(box, cfg, done) {
   if (cfg.timer) timerId = setInterval(() => { if (paused) return; st.left--; const t = Q('#tm'); if (t) { t.textContent = Math.max(0, st.left); t.classList.toggle('low', st.left <= 10); } if (st.left <= 0 && !locked) end(); }, 1000);
   hud(); ask();
 }
+const nq = t => String(t).replace(/[\s　，。、？！：；「」『』（）()…_—\-]+/g, '');
+const bigram = t => { t = nq(t); const b = new Set(); for (let i = 0; i < t.length - 1; i++) b.add(t.slice(i, i + 2)); return b; };
+const sameQ = (a, b) => {                        // 兩題是不是在問同一件事（題目很像、答案一樣）
+  if (nq(a.q) === nq(b.q)) return true;
+  if (nq(a.right) !== nq(b.right)) return false;
+  const A = bigram(a.q), B = bigram(b.q); let n = 0; A.forEach(t => { if (B.has(t)) n++; });
+  return n / ((A.size + B.size - n) || 1) >= 0.25;
+};
 function stepBoss(box, x, done) {
-  const boss = bossOf(x.u.id);
-  const have = new Set(x.u.qs.map(q => q.q));       // 題庫已有的題目不重複出
-  const extra = x.L.cards.filter(c => c.chk && !have.has(c.chk[0])).map(chkQ);
-  battle(box, {name: boss.n, e: boss.e, qs: [...x.u.qs, ...extra], n: 8, hearts: 3}, res => {
+  const boss = bossOf(x.u.id), seen = x.seen || [], fresh = [], again = [];
+  const extra = x.L.cards.filter(c => c.chk && !x.u.qs.some(q => sameQ(q, chkQ(c)))).map(chkQ);
+  [...x.u.qs, ...extra].forEach(q => (seen.some(o => sameQ(o, q)) ? again : fresh).push(q));
+  battle(box, {name: boss.n, e: boss.e, qs: [...shuffle(fresh), ...shuffle(again)], order: true, n: 8, hearts: 3}, res => {
     if (res.win) { earn(x, 20 + res.right * 3, 20 + res.hearts * 10); bump('boss'); }
     done(res);
   });
@@ -730,7 +840,7 @@ function viewMix(sid) {
 }
 function viewSprint() {
   const p = P();
-  app.innerHTML = heroHTML() + `<h1>⏱ 迷霧突襲</h1><p class="mute">60 秒內，迷霧怪一隻接一隻衝過來！選好答案按「確定」，答對就能擊退一隻。每題都會說明對錯原因，看說明的時候計時會暫停。（個人最佳：${p.best['sprint' + DB.grade] || 0} 隻）</p>` +
+  app.innerHTML = heroHTML() + `<h1>⏱ 迷霧突襲</h1><p class="mute">60 秒內，迷霧怪一隻接一隻衝過來！選好答案按「確定」，答對就能擊退一隻。每題只出現一次，都會說明對錯原因，看說明的時候計時會暫停。（個人最佳：${p.best['sprint' + DB.grade] || 0} 隻）</p>` +
     gradeChips() + `<div class="chips" id="sp">${SUBJECTS.map(s => `<button class="chip on" data-s="${s.id}">${s.icon} ${esc(s.name)}</button>`).join('')}</div><button class="btn" id="go">開始突襲 🚀</button>`;
   $('#sp').onclick = e => { const b = e.target.closest('[data-s]'); if (b) b.classList.toggle('on'); };
   $('#go').onclick = () => { const on = $$('#sp .on').map(b => b.dataset.s);
@@ -752,22 +862,22 @@ function viewWrong() {
 
 /* ---------- 雙人對戰：能量球推擠 ---------- */
 function viewDuel() {
-  app.innerHTML = `<h1>⚔️ 雙人對戰</h1><p class="mute">兩個人用同一台裝置，兩邊看到同一題。<b>先答對的人</b>把能量球推向對手。<b>每題每人只能答一次</b>：答錯就失去這題的作答權，並看到為什麼錯；每題結束後，兩邊都會看到每個選項的說明。把球推到對方底線就贏了！<br>鍵盤：左邊玩家按 1 2 3 4，右邊玩家按 7 8 9 0，按 Enter 進入下一題。手機請面對面坐。</p>` +
+  app.innerHTML = `<h1>⚔️ 雙人對戰</h1><p class="mute">兩個人用同一台裝置，兩邊看到同一題。先點選答案，再按自己那邊的「確定」。<b>先答對的人</b>把能量球推向對手。<b>每題每人只能答一次</b>：答錯就失去這題的作答權，並看到為什麼錯；每題結束後，兩邊都會看到每個選項的說明。把球推到對方底線就贏了！<br>鍵盤：左邊玩家用 1 2 3 4 選、5 確定；右邊玩家用 7 8 9 0 選、－ 確定；Enter 進入下一題。手機請面對面坐。</p>` +
     gradeChips() + `<div class="chips" id="sp">${SUBJECTS.map(s => `<button class="chip on" data-s="${s.id}">${s.icon} ${esc(s.name)}</button>`).join('')}</div><button class="btn" id="go">開始對戰 ⚔️</button>`;
   $('#sp').onclick = e => { const b = e.target.closest('[data-s]'); if (b) b.classList.toggle('on'); };
   $('#go').onclick = () => { const on = $$('#sp .on').map(b => b.dataset.s); const qs = SUBJECTS.filter(s => on.includes(s.id)).flatMap(s => s.units.filter(inGrade).flatMap(u => u.qs)); if (qs.length) duel(qs); };
 }
 function duel(qs) {
-  const GOAL = 5, list = shuffle(qs), KEYS = ['1234', '7890'];
-  let pos = 0, qi = 0, over = false, left = 120, opts = [[], []], out = [false, false], picks = [-1, -1], solved = false;
+  const GOAL = 5, list = shuffle(qs), KEYS = ['1234', '7890'], OKK = ['5', '-'];
+  let pos = 0, qi = 0, over = false, left = 120, opts = [[], []], out = [false, false], picks = [-1, -1], sel = [-1, -1], solved = false;
   document.body.classList.add('playing');
   app.innerHTML = `<div class="duel"><div class="dbar"><a href="#/duel" class="hx">✕</a><span>🟥</span><div class="track"><i id="orb">⚡</i></div><span>🟦</span><b class="timer" id="dt">${left}</b></div>
     <div class="dsides"><div class="dside a" id="d0"></div><div class="dmid" id="dmid" hidden><button class="btn pulse" id="dnx">下一題 →</button></div><div class="dside b" id="d1"></div></div></div>`;
   const cq = () => list[qi % list.length];
   const side = k => { const q = cq(); opts[k] = shuffle([q.right, ...q.wrongs]);
-    $('#d' + k).innerHTML = `<div class="dq">${esc(q.q)}</div>${opts[k].map((o, i) => `<button class="opt" data-k="${k}" data-i="${i}"><span class="k">${KEYS[k][i]}</span><span class="ot">${esc(o)}</span></button>`).join('')}<div class="dmsg" id="m${k}" aria-live="polite"></div>`; };
+    $('#d' + k).innerHTML = `<div class="dq">${esc(q.q)}</div>${opts[k].map((o, i) => `<button class="opt" data-k="${k}" data-i="${i}"><span class="k">${KEYS[k][i]}</span><span class="ot">${esc(o)}</span></button>`).join('')}<button class="btn dcf" data-k="${k}" disabled>先選答案</button><div class="dmsg" id="m${k}" aria-live="polite"></div>`; };
   const orb = () => { $('#orb').style.left = (50 + pos * 45 / GOAL) + '%'; };
-  const draw = () => { out = [false, false]; picks = [-1, -1]; solved = false; side(0); side(1); orb(); $('#dmid').hidden = true; $$('.dside').forEach(d => d.classList.remove('out', 'won')); };
+  const draw = () => { out = [false, false]; picks = [-1, -1]; sel = [-1, -1]; solved = false; side(0); side(1); orb(); $('#dmid').hidden = true; $$('.dside').forEach(d => d.classList.remove('out', 'won')); };
   const end = w => { over = true; stopTimer(); document.onkeydown = null; sfx.win(); confetti();
     app.innerHTML = `<div class="quiz"><div class="panel result"><div class="big">${w === 0 ? '🟥' : w === 1 ? '🟦' : '🤝'}</div><h1>${w === 0 ? '左邊（紅隊）獲勝！' : w === 1 ? '右邊（藍隊）獲勝！' : '平手！'}</h1>
       <div class="row c"><button class="btn" id="again">再比一場</button><a class="btn ghost" href="#/duel">重新設定</a><a class="btn ghost" href="#/">回星圖</a></div></div></div>`;
@@ -775,7 +885,7 @@ function duel(qs) {
   const solve = w => {                           // 這一題結束：兩邊都公布每個選項的對錯原因
     solved = true;
     [0, 1].forEach(k => {
-      const d = $('#d' + k); d.classList.remove('out'); revealOpts(d, cq(), opts[k], picks[k]);
+      const d = $('#d' + k); d.classList.remove('out'); revealOpts(d, cq(), opts[k], picks[k]); const cf = $('.dcf', d); if (cf) cf.remove();
       $('#m' + k).innerHTML = w === k ? '<b class="ok">✔ 答對了！能量球往前推一格。</b>看看其他選項為什麼錯。'
         : w === -1 ? '<b class="no">兩邊都答錯了。</b>看看每個選項的說明。'
         : picks[k] >= 0 ? '<b class="no">✘ 你答錯了，對手答對了。</b>看看每個選項的說明。'
@@ -783,18 +893,28 @@ function duel(qs) {
     });
     $('#dnx').textContent = Math.abs(pos) >= GOAL ? '查看結果 →' : '下一題 →'; $('#dmid').hidden = false;
   };
-  const hit = (k, i) => {
+  const choose = (k, i) => {                     // 第一步：點選答案（還可以改）
     if (over || solved || out[k] || i < 0 || i >= opts[k].length) return;
+    sel[k] = i; const d = $('#d' + k); $$('.opt', d).forEach(b => b.classList.toggle('sel', +b.dataset.i === i));
+    const cf = $('.dcf', d); cf.disabled = false; cf.textContent = `確定 ✔（${OKK[k] === '-' ? '－' : OKK[k]}）`; sfx.tap();
+  };
+  const hit = k => {                               // 第二步：按「確定」才判定
+    const i = sel[k]; if (over || solved || out[k] || i < 0) return;
     const q = cq(), o = opts[k][i]; picks[k] = i;
     if (o === q.right) { pos += k === 0 ? 1 : -1; sfx.zap(); orb(); $('#d' + k).classList.add('won'); return solve(k); }
     out[k] = true; sfx.no();
-    const d = $('#d' + k); d.classList.add('out'); $$('.opt', d).forEach(b => { b.disabled = true; }); $(`.opt[data-i="${i}"]`, d).classList.add('wrong', 'mine');
+    const d = $('#d' + k); d.classList.add('out'); $$('.opt', d).forEach(b => { b.disabled = true; b.classList.remove('sel'); }); $(`.opt[data-i="${i}"]`, d).classList.add('wrong', 'mine'); $('.dcf', d).disabled = true;
     $('#m' + k).innerHTML = `<b class="no">✘ 「${esc(o)}」不對</b>：${esc(whyOf(q, o))}<br><span class="mute">這題你不能再答了，換對手作答。</span>`;
     if (out[0] && out[1]) solve(-1);
   };
   $('#dnx').onclick = () => { if (over || !solved) return; if (Math.abs(pos) >= GOAL) return end(pos > 0 ? 0 : 1); qi++; draw(); };
-  $('.dsides').onclick = e => { const b = e.target.closest('.opt'); if (b) hit(+b.dataset.k, +b.dataset.i); };
-  document.onkeydown = e => { if (e.key === 'Enter') { if (solved) { e.preventDefault(); $('#dnx').click(); } return; } const a = KEYS[0].indexOf(e.key), b = KEYS[1].indexOf(e.key); if (e.key.length !== 1) return; if (a >= 0) hit(0, a); else if (b >= 0) hit(1, b); };
+  $('.dsides').onclick = e => { const c = e.target.closest('.dcf'); if (c) return hit(+c.dataset.k); const b = e.target.closest('.opt'); if (b) choose(+b.dataset.k, +b.dataset.i); };
+  document.onkeydown = e => {
+    if (e.key === 'Enter') { if (solved) { e.preventDefault(); $('#dnx').click(); } return; }
+    if (e.key.length !== 1) return;
+    const k = OKK.indexOf(e.key); if (k >= 0) return hit(k);
+    const a = KEYS[0].indexOf(e.key), b = KEYS[1].indexOf(e.key); if (a >= 0) choose(0, a); else if (b >= 0) choose(1, b);
+  };
   timerId = setInterval(() => { if (solved || over) return; left--; const t = $('#dt'); if (t) t.textContent = left; if (left <= 0) end(pos > 0 ? 0 : pos < 0 ? 1 : 2); }, 1000);
   draw();
 }

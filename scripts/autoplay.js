@@ -1,7 +1,8 @@
 /* 瀏覽器端自動試玩（開發用，不會部署）：
    在本機開啟網站後，於主控台執行  await import('/scripts/autoplay.js')  再呼叫  await __autoAll()
    會把每顆星球的完整任務（對話 → 實驗室 → 知識碎片 → 小遊戲 → Boss 戰）實際點過一遍。
-   __autoAll(() => true, {wrong: true})：每個作答關卡都先故意答錯一次，檢查有沒有顯示「為什麼錯」。 */
+   每次按「確定作答」後，都會檢查畫面有停下來顯示說明、要按「下一題」才會繼續（不會自動跳題）。
+   __autoAll(() => true, {wrong: true})：每個關卡都先故意答錯一次，檢查有沒有顯示「為什麼錯」。 */
 (() => {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const norm = t => String(t).replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
@@ -25,97 +26,122 @@ function whyMissing(root) {
   const bad = os.find(b => !b.querySelector('.why') || tx(b.querySelector('.why')).replace(/^[✔✘]\s*/, '').length < 2);
   return bad ? '選項缺少說明：' + tx(bad).slice(0, 24) : null;
 }
-const noteOK = () => { const n = $('#sc .exp.err'); return !!n && tx(n).length > 8; };
+class Stop extends Error {}
 async function playOne(uid, part = 'all', wrong = false) {
   const D = await load(), U = D.units[uid], L = D.lessons[uid], seen = new Set(), did = new Set();
   const once = k => wrong && !did.has(k) && !!did.add(k);           // 每個關卡只故意答錯一次
-  const have = new Set(U.q.map(q => q[0]));
-  const qs = U.q.map(q => ({ q: q[0], right: q[1] })).concat(L.cards.filter(c => c.chk && !have.has(c.chk[0])).map(c => ({ q: c.chk[0], right: c.chk[1] })));
+  const qs = U.q.map(q => ({ q: q[0], right: q[1] })).concat(L.cards.filter(c => c.chk).map(c => ({ q: c.chk[0], right: c.chk[1] })));
+  let checked = 0, wrongSeen = 0, gw = null;
+  const commit = (b, where) => { b.click(); if (!$('#sc #nx')) throw new Stop(where + '：按了確定作答，卻沒有停下來顯示說明'); };
   window.__fast = true;
   const ov = document.querySelector('.ov'); if (ov) ov.remove();
   location.hash = '#/'; await sleep(40); location.hash = `#/play/${uid}/${part}`; await sleep(60);
-  let checked = 0;
-  for (let step = 0; step < 1500; step++) {
-    await sleep(35);
-    const res = $('.result');
-    if (res && $('.result .pl.big')) {
-      const stars = ($('.result > div.big')?.textContent || '').replace(/\s/g, '');
-      return { uid, ok: stars.startsWith('★★★') || part !== 'all', stars, title: $('.result h1').textContent, seen: [...seen], checked };
-    }
-    if ($('#dn')) { seen.add('dialog'); $('#dn').click(); continue; }
-    if ($('.lab')) {
-      seen.add('lab');
-      if ($('#lnext')) { $('#lnext').click(); continue; }
-      const h = window.__lab; h.lab.missions[h.mi()].sol(h.s); h.check(); continue;
-    }
-    if ($('.chk')) {                                                // 快問：選 → 確定 → 讀說明 → 收進圖鑑
-      seen.add('quick');
-      const nx = $('#nx'); if (nx) { if (!nx.disabled) { const e = whyMissing($('.chk')); if (e) return { uid, err: e }; checked++; nx.click(); } continue; }
-      const cf = $('#cf'); if ($('.chk .opt.sel') && cf && !cf.disabled) { cf.click(); continue; }
-      const card = L.cards.find(c => c.t === tx($('.lcard h2'))), bad = once('q:' + card.t);
-      const o = $$('.chk .opt').find(b => (tx(b.querySelector('.ot')) === norm(card.chk[1])) !== bad); if (!o) return { uid, err: 'quick option missing' }; o.click(); continue;
-    }
-    if ($('.tiles') || ($('.lcard') && $('#go') && !$('.scan'))) {
-      seen.add('restore');
-      const cur = $('.blank.cur');
-      if (cur) {
-        const tiles = $$('.tile2:not([disabled])');
-        if (!$('.tiles.hold') && once('r:' + tx($('.lcard h2')))) { const w = tiles.find(b => b.textContent !== cur.dataset.a); if (w) { w.click(); if (!noteOK()) return { uid, err: 'restore 答錯沒有說明' }; checked++; continue; } }
-        const t = tiles.find(b => b.textContent === cur.dataset.a); if (!t) return { uid, err: 'restore tile missing: ' + cur.dataset.a }; t.click();
-      } else if ($('#go')) $('#go').click();
-      continue;
-    }
-    if ($('.scan')) {
-      seen.add('scan');
-      const card = L.cards.find(c => c.t === tx($('.lcard h2')));
-      if ($('#go')) { $('#go').click(); continue; }
-      const ask = $('.sinfo.ask');
-      if (ask) {
-        const i = card.flip.findIndex(f => norm(f[1]) === tx(ask)); if (i < 0) return { uid, err: 'scan ask not found' };
-        if (!$('.orbs.hold') && once('s:' + card.t)) { const w = $$('.orb2').find(o => +o.dataset.i !== i); if (w) { w.click(); if (!noteOK()) return { uid, err: 'scan 答錯沒有說明' }; checked++; continue; } }
-        $(`.orb2[data-i="${i}"]`).click(); continue;
+  try {
+    for (let step = 0; step < 3000; step++) {
+      await sleep(30);
+      const res = $('.result');
+      if (res && $('.result .pl.big')) {
+        const stars = ($('.result > div.big')?.textContent || '').replace(/\s/g, '');
+        return { uid, ok: (stars.startsWith('★★★') || part !== 'all') && (!wrong || wrongSeen >= 3), stars, title: $('.result h1').textContent, seen: [...seen], checked, wrongSeen };
       }
-      const o = $('.orb2:not(.seen)'); if (o) o.click(); continue;
+      const nx = $('#sc #nx');                                        // 判定之後：一定要有說明，按「下一題」才繼續
+      if (nx) {
+        if (nx.disabled) continue;
+        const fb = $('#sc .exp.good, #sc .exp.err'); if (!fb) return { uid, err: '判定後沒有說明' };
+        if ($('.bt') || $('.chk')) { const e = whyMissing($('.bt') ? $('#qa') : $('.chk')); if (e) return { uid, err: e }; }
+        if (fb.classList.contains('err')) wrongSeen++;
+        checked++; nx.click(); continue;
+      }
+      if ($('#dn')) { seen.add('dialog'); $('#dn').click(); continue; }
+      if ($('.lab')) {
+        seen.add('lab'); const h = window.__lab;
+        if (h.judged()) continue;
+        if (!once('lab')) h.lab.missions[h.mi()].sol(h.s);            // 答錯模式：第一個任務不照解法做就按確定
+        h.act(); h.judge(); if (!$('#sc #nx')) return { uid, err: '實驗室按了確定作答，卻沒有停下來說明' };
+        continue;
+      }
+      if ($('.chk')) {                                                // 快問：選 → 確定
+        seen.add('quick');
+        const cf = $('#cf'); if ($('.chk .opt.sel') && cf && !cf.disabled) { commit(cf, '快問'); continue; }
+        const card = L.cards.find(c => c.t === tx($('.lcard h2'))), bad = once('q:' + card.t);
+        const o = $$('.chk .opt').find(b => (tx(b.querySelector('.ot')) === norm(card.chk[1])) !== bad); if (!o) return { uid, err: 'quick option missing' }; o.click(); continue;
+      }
+      if ($('.tiles')) {                                              // 修復關鍵字：全部填好 → 確定
+        seen.add('restore');
+        const cf = $('#cf'); if (cf && !cf.disabled) { commit(cf, '修復關鍵字'); continue; }
+        const cur = $('.blank.cur') || $('.blank[data-b]:not(.full)'); if (!cur) continue;
+        const tiles = $$('.tile2:not([disabled])'), answers = $$('.blank[data-a]').map(b => b.dataset.a);
+        let t = once('r:' + tx($('.lcard h2'))) ? (tiles.find(b => !answers.includes(b.textContent)) || tiles.find(b => b.textContent !== cur.dataset.a)) : null;
+        if (!t) t = tiles.find(b => b.textContent === cur.dataset.a) || tiles[0];
+        if (!t) return { uid, err: 'restore 沒有字卡' };
+        t.click(); continue;
+      }
+      if ($('.scan')) {
+        seen.add('scan');
+        const card = L.cards.find(c => c.t === tx($('.lcard h2')));
+        if ($('#go')) { $('#go').click(); continue; }
+        const ask = $('.sinfo.ask');
+        if (ask) {
+          const cf = $('#cf'); if ($('.orb2.sel') && cf && !cf.disabled) { commit(cf, '掃描辨識'); continue; }
+          const i = card.flip.findIndex(f => norm(f[1]) === tx(ask)); if (i < 0) return { uid, err: 'scan ask not found' };
+          const bad = once('s:' + card.t), o = $$('.orb2').find(x => (+x.dataset.i === i) !== bad); o.click(); continue;
+        }
+        const o = $('.orb2:not(.seen)'); if (o) o.click(); continue;
+      }
+      if ($('.lcard') && $('#go')) { $('#go').click(); continue; }  // 「記住了」或收進圖鑑
+      if (res && $('#go')) { $('#go').click(); continue; }            // 小遊戲結算
+      if ($('.gm')) {
+        const g = L.game, cf = $('#cf'), ready = cf && !cf.disabled && !cf.closest('[hidden]');
+        if ($('#cover')) { seen.add('memory'); $('#cover').click(); continue; }
+        if ($('.mc')) { seen.add('memory');
+          if ($('.mc.sel') && ready) { commit(cf, '記憶翻牌'); continue; }
+          const p = g.pairs.find(p => norm(p[0]) === tx($('.btarget b'))); if (!p) return { uid, err: 'memory target' };
+          const bad = once('game'), c = $$('.mc:not([disabled])').find(b => (tx(b.querySelector('.mb')) === norm(p[1])) !== bad); if (!c) return { uid, err: 'memory card' }; c.click(); continue; }
+        if ($('.bb')) { seen.add('bubbles');
+          if ($('.bb.sel') && ready) { commit(cf, '泡泡射擊'); continue; }
+          const p = g.pairs.find(p => norm(p[0]) === tx($('.btarget b'))); if (!p) return { uid, err: 'bubble target' };
+          const bad = once('game'), b = $$('.bb:not([disabled])').find(x => (tx(x) === norm(p[1])) !== bad); if (!b) return { uid, err: 'bubble missing' }; b.click(); continue; }
+        if ($('.sky')) { seen.add('meteor');
+          if ($('.bk.sel') && ready) { commit(cf, '隕石攔截'); continue; }
+          const m = $('.met span'); if (!m) continue;
+          const it = g.items.find(x => norm(x[0]) === tx(m)); if (!it) return { uid, err: 'meteor item' };
+          const bad = once('game'), b = $$('.bk:not([disabled])').find(x => (+x.dataset.k === it[1]) !== bad); if (b) b.click(); continue; }
+        if ($('.st2')) { seen.add('stars');
+          if (ready) { commit(cf, '連星座'); continue; }
+          if (gw === null) gw = once('game');
+          const ord = g.items.map((_, k) => k); if (gw && ord.length > 1) [ord[0], ord[1]] = [ord[1], ord[0]];
+          const b = $(`.st2[data-k="${ord[$$('.st2.on').length]}"]`); if (b) b.click(); continue; }
+        if ($('.sent')) { seen.add('sentence');
+          if (ready) { commit(cf, '拼句子'); continue; }
+          if (gw === null) gw = once('game');
+          const want = g.items.slice(); if (gw && want.length > 1 && want[0] !== want[1]) [want[0], want[1]] = [want[1], want[0]];
+          const b = $$('.chip2:not([disabled])').find(x => x.textContent === want[$$('.sent .w.full').length]); if (b) b.click(); continue; }
+        if ($('.tile')) { seen.add('link');
+          if (ready) { commit(cf, '連連看'); continue; }
+          if (gw === null) gw = once('game');
+          const ls = $$('.tile[data-s=l]'), k = +((cf && cf.textContent.match(/已配對 (\d+)/)) || [0, 0])[1];
+          const l = ls[k]; if (!l) continue; const partner = gw && k < 2 && ls.length > 1 ? ls[1 - k].dataset.i : l.dataset.i;
+          l.click(); const r = $(`.tile[data-s=r][data-i="${partner}"]`); if (r) r.click(); continue; }
+      }
+      if ($('.bt')) {                                                 // Boss：選 → 確定
+        seen.add('boss');
+        const qb = $('.qbox'); if (!qb) continue;
+        const cf = $('#cf'); if ($('#qa .opt.sel') && cf && !cf.disabled) { commit(cf, 'Boss 戰'); continue; }
+        const qt = qb.textContent.trim(), q = qs.find(x => x.q.trim() === qt); if (!q) return { uid, err: 'boss question not found: ' + qt.slice(0, 30) };
+        const b = once('boss'), tfc = $('.tfc');
+        if (tfc) { seen.add('tf'); const cand = tfc.textContent.replace('👉', '').trim(); $(`.opt[data-tf="${(cand === q.right.trim()) !== b ? 1 : 0}"]`).click(); }
+        else { const o = $$('#qa .opts .opt').find(x => (x.querySelector('.ot').textContent.trim() === q.right.trim()) !== b); if (!o) return { uid, err: 'boss option missing' }; o.click(); }
+        continue;
+      }
     }
-    if ($('.gm')) {
-      const g = L.game, bad = () => once('game'), chk = () => { if (!noteOK()) return { uid, err: '小遊戲答錯沒有說明' }; checked++; return null; };
-      if ($('.mc')) { seen.add('memory'); const c = $$('.mc:not(.ok)'); if (!c.length) continue; const p = c[0].dataset.p, pair = c.filter(b => b.dataset.p === p); if (pair.some(b => b.classList.contains('on'))) { await sleep(60); continue; } pair[0].click(); pair[1].click(); continue; }
-      if ($('.bb')) { seen.add('bubbles'); const i = g.pairs.findIndex(p => norm(p[0]) === tx($('#bt2')));
-        if (bad()) { const w = $$('.bb:not([disabled])').find(x => +x.dataset.p !== i); if (w) { w.click(); const e = chk(); if (e) return e; await sleep(40); continue; } }
-        const b = $(`.bb[data-p="${i}"]:not([disabled])`); if (b) b.click(); continue; }
-      if ($('.sky')) { seen.add('meteor'); const m = $('.met:not(.boom)');
-        if (m && m.style.animationPlayState !== 'paused' && bad()) { const w = $$('.bk').find(x => x.dataset.k !== m.dataset.k); if (w) { w.click(); const e = chk(); if (e) return e; continue; } }
-        if (m) $(`.bk[data-k="${m.dataset.k}"]`).click(); else if ($('#res')) $('#res').click(); continue; }
-      if ($('.st2')) { seen.add('stars'); const n = $$('.st2.on').length;
-        if (bad()) { const w = $$('.st2:not(.on)').find(x => +x.dataset.k !== n); if (w) { w.click(); const e = chk(); if (e) return e; await sleep(40); continue; } }
-        const b = $$('.st2').find(x => +x.dataset.k === n); if (b) b.click(); continue; }
-      if ($('.sent')) { seen.add('sentence'); const want = g.items[$$('.w.on').length];
-        if (bad()) { const w = $$('.chip2:not([disabled])').find(x => x.textContent !== want); if (w) { w.click(); const e = chk(); if (e) return e; await sleep(40); continue; } }
-        const b = $$('.chip2:not([disabled])').find(x => x.textContent === want); if (b) b.click(); continue; }
-      if ($('.tile')) { seen.add('link'); const l = $('.tile[data-s=l]:not([disabled])');
-        if (l && bad()) { l.click(); const w = $(`.tile[data-s=r]:not([disabled]):not([data-i="${l.dataset.i}"])`); if (w) { w.click(); const e = chk(); if (e) return e; await sleep(40); continue; } }
-        if (l) { l.click(); $(`.tile[data-s=r][data-i="${l.dataset.i}"]`).click(); } continue; }
-    }
-    if (res && $('#go')) { $('#go').click(); continue; }            // 小遊戲結算
-    if ($('.bt')) {                                                 // Boss：選 → 確定 → 讀說明 → 繼續
-      seen.add('boss');
-      const nx = $('#nx'); if (nx) { if (!nx.disabled) { const e = whyMissing($('#qa')); if (e) return { uid, err: e }; checked++; nx.click(); } continue; }
-      const qb = $('.qbox'); if (!qb) continue;
-      const cf = $('#cf'); if ($('#qa .opt.sel') && cf && !cf.disabled) { cf.click(); continue; }
-      const qt = qb.textContent.trim(), q = qs.find(x => x.q.trim() === qt); if (!q) return { uid, err: 'boss question not found: ' + qt.slice(0, 30) };
-      const b = once('boss'), tfc = $('.tfc');
-      if (tfc) { seen.add('tf'); const cand = tfc.textContent.replace('👉', '').trim(); $(`.opt[data-tf="${(cand === q.right.trim()) !== b ? 1 : 0}"]`).click(); }
-      else { const o = $$('#qa .opts .opt').find(x => (x.querySelector('.ot').textContent.trim() === q.right.trim()) !== b); if (!o) return { uid, err: 'boss option missing' }; o.click(); }
-      continue;
-    }
-  }
+  } catch (e) { if (e instanceof Stop) return { uid, err: e.message }; throw e; }
   return { uid, err: 'timeout', at: document.querySelector('#sc')?.textContent.slice(0, 80) };
 }
 window.__playOne = playOne;
 window.__autoAll = async (filter = () => true, opt = {}) => {
-  const D = await load(); window.__auto = { done: false, bad: [], n: 0, kinds: {}, checked: 0 };
+  const D = await load(); window.__auto = { done: false, bad: [], n: 0, kinds: {}, checked: 0, wrongSeen: 0 };
   for (const uid of D.list.filter(filter)) {
-    const r = await playOne(uid, 'all', !!opt.wrong); window.__auto.n++; window.__auto.checked += r.checked || 0;
+    const r = await playOne(uid, 'all', !!opt.wrong); window.__auto.n++; window.__auto.checked += r.checked || 0; window.__auto.wrongSeen += r.wrongSeen || 0;
     (r.seen || []).forEach(k => { window.__auto.kinds[k] = (window.__auto.kinds[k] || 0) + 1; });
     if (!r.ok) window.__auto.bad.push(r);
   }

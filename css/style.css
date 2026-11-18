@@ -309,6 +309,28 @@ h1{font-size:1.5rem; margin:.2em 0 .4em} h2{font-size:1.15rem; margin:1.2em 0 .5
 .dside.out .opt{opacity:.5} .dside.won{box-shadow:0 0 0 3px var(--ok)}
 .dmsg{font-size:.9rem; line-height:1.5} .dmsg:empty{display:none}
 @media (max-width:640px){ .dmid{order:0} .opt .why{margin-left:0} }
+/* 所有作答都是「選 → 確定作答 → 說明 → 下一題」 */
+[hidden]{display:none!important}
+.lab.judged .ctrls,.lab.judged .labview{pointer-events:none} .lab.judged .ctrls{opacity:.5}
+.mis.miss{border-color:var(--bad); background:#3a1420} .mis.miss::after{content:" ✘"; color:var(--bad)}
+.typo span.mk{background:#ffd16655; box-shadow:inset 0 0 0 2px var(--acc)} .typo span.wr{color:#fca5a5; text-decoration:line-through; cursor:default} .typo span.pl{cursor:default}
+.ht.hm{background:#ffe08a; border-bottom:2px solid #b45309} .ht.hwr{background:#fecaca; text-decoration:line-through} .ht.hmiss{background:#fed7aa; border-bottom:2px solid #c2410c}
+.hnotes{margin:10px 0 0; padding-left:18px; font-size:.95rem; line-height:1.6} .hnotes li.n{color:#991b1b} .hnotes li.y{color:#14532d}
+.blank{cursor:pointer} .blank::before{content:attr(data-n); font-size:.62em; vertical-align:super; margin-right:3px; opacity:.75}
+.blank.full{color:var(--txt); border-bottom-style:solid; background:#ffffff14}
+.blank.no{cursor:default; color:var(--txt); border-bottom:2px solid var(--bad); background:#5b1a2a88} .blank.no s{color:#fca5a5} .blank.no b{color:#86efac}
+.orb2.sel{border-color:var(--acc); box-shadow:0 0 0 3px var(--acc),0 0 18px var(--acc)}
+.orb2.right{background:#14532d; border-color:var(--ok); box-shadow:none; animation:none} .orb2.wrong{background:#5b1a2a; border-color:var(--bad); box-shadow:none; animation:none} .orb2.dim{opacity:.45; animation:none}
+.bb.sel{border-color:var(--acc); background:#4b3c0a; box-shadow:0 0 16px var(--acc)} .bb.right{border-color:var(--ok); background:#14532d; animation:none} .bb.wrong{border-color:var(--bad); background:#5b1a2a; animation:none}
+.bk.sel{border-color:var(--acc); background:#4b3c0a} .bk.no{border-color:var(--bad); background:#5b1a2a} .bk:disabled{cursor:default}
+.met.wait span{animation:pulse 1.2s infinite}
+.mc.sel{border-color:var(--acc); box-shadow:0 0 0 3px #fbbf2466} .mc.no{border-color:var(--bad); background:#5b1a2a; opacity:1} .mc:disabled{cursor:default}
+.st2.no i{background:var(--bad); color:#fff; border-color:#fff; box-shadow:none} .st2 em{font-style:normal; font-size:.72rem; color:#fca5a5}
+.w.full{color:var(--txt); border-bottom:2px solid var(--acc); cursor:pointer} .w.no{background:#5b1a2a; color:#fecaca; border:0; border-radius:8px; text-decoration:line-through}
+.sent.ans{border:1px solid var(--ok)} .sent.ans::before{content:'正確：'; color:var(--ok); font-weight:700; align-self:center}
+.tile .tb{display:inline-block; min-width:22px; height:22px; line-height:22px; border-radius:50%; background:var(--acc); color:#1a1a2e; font-weight:800; font-size:.8rem; margin-right:6px; text-align:center}
+.tile.okk{border-color:var(--ok); background:#14532d} .tile.no{border-color:var(--bad); background:#5b1a2a}
+.dcf{width:100%; margin-top:2px}
 .result{text-align:center; padding:26px 16px; display:grid; justify-items:center; gap:2px}
 .result .big{font-size:2.8rem; letter-spacing:6px; color:var(--acc)}
 .result .say{text-align:left}

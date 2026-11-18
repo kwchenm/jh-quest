@@ -1,4 +1,4 @@
-// 實驗室自動測試：每個任務「進入時尚未達成」、「套用解法後達成」，且畫面、控制項都不會出錯
+// 實驗室自動測試：每個任務「進入時尚未達成」、「套用解法後達成」，答錯原因（why）與判定後的畫面、控制項都不會出錯
 import '../js/labs.js';
 import '../js/labs2.js';
 import '../js/labs3.js';
@@ -27,12 +27,17 @@ for (const id of Object.keys(L)) {
       });
       if (m.ok(s)) errs.push(`${tag}: 一進入就已經達成`);
       if (!m.sol) { errs.push(`${tag}: 沒有 sol`); return; }
+      if (m.why !== undefined) { const w = typeof m.why === 'function' ? m.why(s) : m.why; if (!w || bad(w)) errs.push(`${tag}: why 有問題`); }
       m.sol(s);
       if (!m.ok(s)) errs.push(`${tag}: 套用解法後仍未達成`);
       const say = typeof m.say === 'function' ? m.say(s) : m.say; if (!say || bad(say)) errs.push(`${tag}: say 有問題`);
       if (typeof m.hint === 'function') m.hint(s);
       if (bad(lab.view(s))) errs.push(`${tag}: 完成後 view 有問題`);
       if (lab.read) lab.read(s);
+      s.judged = true; s.right = true;                     // 按下「確定作答」後的畫面
+      if (bad(lab.view(s))) errs.push(`${tag}: 判定後 view 有問題`);
+      (lab.read ? lab.read(s) : []).forEach(r => { if (bad(r[0]) || bad(r[1])) errs.push(`${tag}: 判定後 read 有問題 → ${r}`); });
+      s.judged = false; s.right = false;
     });
     // 按鈕、開關不會丟出例外
     const t = lab.init(); t.mi = 0; if (lab.missions[0].set) lab.missions[0].set(t);

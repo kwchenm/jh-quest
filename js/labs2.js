@@ -44,16 +44,23 @@ function huntLab(name, intro, docs) {
   const P = docs.map(d => { const toks = [], re = /\{([^|}]+)\|([^|}]*)(\|\*)?\}|([^{]+)/g; let m;
     while ((m = re.exec(d.text))) toks.push(m[4] !== undefined ? { t: m[4] } : { t: m[1], n: m[2], hit: !!m[3] });
     return { ...d, toks, need: toks.filter(t => t.hit).length }; });
-  return { name, intro,
-    init: () => ({ d: 0, found: {}, note: -1 }),
-    view: s => { const D = P[s.d];
-      return `<div class="hunt">${D.head ? `<div class="hhead">${esc(D.head)}</div>` : ''}<div class="hbody">` + D.toks.map((t, i) => t.n === undefined ? esc(t.t).replace(/\n/g, '<br>')
-        : `<span class="ht${s.found[i] ? ' hf' : ''}${s.note === i ? ' hn' : ''}" data-tap="${i}">${esc(t.t).replace(/\n/g, '<br>')}</span>`).join('') + '</div></div>'; },
-    read: s => { const D = P[s.d], t = D.toks[s.note];
-      return [['已找到', `${Object.keys(s.found).length} / ${D.need}`], t ? ['「' + esc(t.t.length > 14 ? t.t.slice(0, 14) + '…' : t.t) + '」', esc(t.n)] : ['提示', '點有虛線的字句，看看說明']]; },
-    tap: (s, id) => { const t = P[s.d].toks[+id]; if (!t || t.n === undefined) return; s.note = +id; if (t.hit) s.found[id] = 1; },
-    missions: P.map((D, i) => M(D.m, s => { s.d = i; s.found = {}; s.note = -1; }, s => s.d === i && Object.keys(s.found).length >= D.need, D.say,
-      s => { D.toks.forEach((t, k) => { if (t.hit) s.found[k] = 1; }); }, D.hint || '每個有虛線的地方都點點看，讀一下說明。'))
+  const clean = n => n.replace(/^[✗✓★]\s*/, '');
+  const picked = s => Object.keys(s.mark).filter(k => s.mark[k]).length;
+  return { name, intro: intro + '\n點一下是「標記」（再點一次取消），標好再按「確定作答」，就會公布每一處的說明。',
+    init: () => ({ d: 0, mark: {} }),
+    view: s => { const D = P[s.d], br = t => esc(t).replace(/\n/g, '<br>');
+      const body = D.toks.map((t, i) => t.n === undefined ? br(t.t)
+        : s.judged ? `<span class="ht ${t.hit ? (s.mark[i] ? 'hf' : 'hmiss') : s.mark[i] ? 'hwr' : ''}">${br(t.t)}</span>`
+        : `<span class="ht${s.mark[i] ? ' hm' : ''}" data-tap="${i}">${br(t.t)}</span>`).join('');
+      const notes = s.judged ? '<ul class="hnotes">' + D.toks.map((t, i) => t.n === undefined || !(t.hit || s.mark[i]) ? ''
+        : `<li class="${t.hit ? 'y' : 'n'}">${t.hit ? '🎯' : '✘'} <b>${esc(t.t.trim())}</b>：${esc(clean(t.n))}</li>`).join('') + '</ul>' : '';
+      return `<div class="hunt">${D.head ? `<div class="hhead">${esc(D.head)}</div>` : ''}<div class="hbody">${body}</div>${notes}</div>`; },
+    read: s => [['已標記', `${picked(s)} 處（要找 ${P[s.d].need} 處）`]],
+    tap: (s, id) => { const t = P[s.d].toks[+id]; if (!t || t.n === undefined) return; s.mark[id] = !s.mark[id]; },
+    missions: P.map((D, i) => Object.assign(M(D.m, s => { s.d = i; s.mark = {}; }, s => s.d === i && D.toks.every((t, k) => t.n === undefined || !!t.hit === !!s.mark[k]), D.say,
+      s => { s.mark = {}; D.toks.forEach((t, k) => { if (t.hit) s.mark[k] = true; }); }, D.hint || '想想任務要找的是什麼，再一處一處檢查有虛線的地方。'),
+      { why: s => [...D.toks.map((t, k) => t.n !== undefined && !t.hit && s.mark[k] ? `你標的「${t.t.trim()}」：${clean(t.n)}` : ''),
+        ...D.toks.map((t, k) => t.hit && !s.mark[k] ? `漏掉了「${t.t.trim()}」：${clean(t.n)}` : '')].filter(Boolean).join('\n') || '標記的數量不對。' }))
   };
 }
 
@@ -199,14 +206,19 @@ const VOY = [
   ['麥哲倫船隊（1519–1522）從西班牙往西出發，最後回到西班牙。依序點出航線，完成環球一圈', ['ib', 'sam', 'phl', 'cape', 'ib'], '船隊繞過**南美洲南端**、橫越太平洋到**菲律賓**（麥哲倫在這裡戰死），再繞過**好望角**回到西班牙，第一次完成**環球航行**。']
 ];
 L.hi9a2 = {
-  name: '大航海航線規劃', intro: '你是十五、十六世紀的領航員！**依序點地圖上的地點**，幫航海家畫出他的航線。點錯了不會畫上去。',
-  init: () => ({ route: ['ib'], msg: '' }),
+  name: '大航海航線規劃', intro: '你是十五、十六世紀的領航員！**依序點地圖上的地點**畫出航線（點錯可以按「↩ 退回上一站」），畫好再按「確定作答」。',
+  init: () => ({ route: ['ib'] }),
+  ctrl: [{ type: 'btn', label: '↩ 退回上一站', run: s => { if (s.route.length > 1) s.route.pop(); } }],
   view: s => { const pts = s.route.map(k => SEA[k][1] + ',' + SEA[k][2]).join(' '), last = SEA[s.route[s.route.length - 1]];
     return world(`<polyline points="${pts}" class="route"/>` + Object.keys(SEA).map(k => { const [n, x, y, dx, dy] = SEA[k];
-      return `<g data-tap="${k}" class="pin${s.route.includes(k) ? ' on' : ''}"><circle cx="${x}" cy="${y}" r="12" class="hit"/><circle cx="${x}" cy="${y}" r="4.5" class="dot"/>${T(x + dx, y + dy, n, 'class="plb"')}</g>`; }).join('') + T(last[1], last[2] - 12, '⛵', 'font-size="15" pointer-events="none"')) + (s.msg ? `<p class="labnote"><b>${s.msg}</b></p>` : ''); },
+      return `<g data-tap="${k}" class="pin${s.route.includes(k) ? ' on' : ''}"><circle cx="${x}" cy="${y}" r="12" class="hit"/><circle cx="${x}" cy="${y}" r="4.5" class="dot"/>${T(x + dx, y + dy, n, 'class="plb"')}</g>`; }).join('') + T(last[1], last[2] - 12, '⛵', 'font-size="15" pointer-events="none"')); },
   read: s => [['航線', s.route.map(k => SEA[k][0]).join(' → ')]],
-  tap: (s, id) => { const seq = VOY[s.mi || 0][1], want = seq[s.route.length]; if (!want) return; if (id === want) { s.route.push(id); s.msg = ''; } else s.msg = `「${SEA[id][0]}」不是下一站，想想他往哪個方向航行。`; },
-  missions: VOY.map((v, i) => M(v[0], s => { s.route = ['ib']; s.msg = ''; }, s => s.route.join() === v[1].join(), v[2], s => { s.route = v[1].slice(); }, '起點在歐洲最西邊的伊比利半島。看清楚是「往西」還是「繞過非洲」。'))
+  tap: (s, id) => { if (s.route[s.route.length - 1] !== id && s.route.length < 7) s.route.push(id); },
+  missions: VOY.map((v, i) => Object.assign(M(v[0], s => { s.route = ['ib']; }, s => s.route.join() === v[1].join(), v[2], s => { s.route = v[1].slice(); }, '起點在歐洲最西邊的伊比利半島。看清楚是「往西」還是「繞過非洲」。'),
+    { why: s => { const r = s.route, w = v[1], k = w.findIndex((id, j) => r[j] !== id);
+      if (k < 0) return `航線多畫了：${r.slice(w.length).map(id => SEA[id][0]).join('、')}。`;
+      if (k >= r.length) return `航線還沒畫完，接下來應該到「${SEA[w[k]][0]}」。`;
+      return `第 ${k} 站你點了「${SEA[r[k]][0]}」，應該是「${SEA[w[k]][0]}」。`; } }))
 };
 
 const H9B = [[1760, 1870, '工業革命（蒸汽時代）', '#6b5b3a'], [1870, 1914, '新帝國主義', '#3f5a8f'], [1914, 1919, '第一次世界大戰', '#7a3a3a'], [1919, 1939, '兩次大戰之間', '#4a6a5a'], [1939, 1946, '第二次世界大戰', '#5a2f2f']];
@@ -309,17 +321,25 @@ const BILL = [
   ['有一位官員違法失職，之後還要補一位新的公務員', [['ct', '第 1 步：誰可以彈劾違法失職的官員？'], ['ks', '第 2 步：新的公務員要通過哪個機關辦的國家考試？']], '**監察院**彈劾違法失職的官員；**考試院**辦理國家考試。五權分立，互相制衡。']
 ];
 L.ci8a1 = {
-  name: '公文旅行地圖', intro: '中央政府有總統府和五個院，各有各的工作。**點建築物**看它的職權，再照任務把公文 📜 送到正確的地方！',
-  init: () => ({ si: 0, trail: [], note: '', msg: '' }),
+  name: '公文旅行地圖', intro: '中央政府有總統府和五個院，各有各的工作。**點建築物**看它的職權，決定好了按「📜 把公文送到選的地方」。整條路線送完，再按「確定作答」。',
+  init: () => ({ trail: [], note: '' }),
+  ctrl: [{ type: 'btn', label: '📜 把公文送到選的地方', run: s => { const st = BILL[s.mi || 0][1]; if (s.note && s.trail.length < st.length) s.trail.push(s.note); } },
+    { type: 'btn', label: '↩ 退回一步', run: s => { s.trail.pop(); } }],
   view: s => { let g = ''; const pts = [[150, 160]].concat(s.trail.map(k => [GOV[k][1], GOV[k][2]]));
     if (pts.length > 1) g += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" class="route"/>`;
     Object.keys(GOV).forEach(k => { const [n, x, y] = GOV[k]; g += `<g data-tap="${k}"><rect x="${x - 27}" y="${y - 21}" width="54" height="42" rx="8" class="bldr${s.note === k ? ' on' : ''}"/>${T(x, y - 6, k === 'pres' ? '🏛️' : '🏢', 'font-size="14" pointer-events="none"')}${T(x, y + 11, n, 'class="plb" pointer-events="none"')}</g>`; });
     const at = pts[pts.length - 1];
-    return svg(300, 172, g + T(150, 166, '起點', 'class="tk"') + T(at[0] + 20, at[1] - 18, '📜', 'font-size="16" pointer-events="none"')) + (s.msg ? `<p class="labnote"><b>${s.msg}</b></p>` : ''); },
-  read: s => { const st = BILL[s.mi || 0][1]; return [['下一步', s.si < st.length ? st[s.si][1] : '完成！🎉'], s.note ? [GOV[s.note][0], GOV[s.note][3]] : ['提示', '點建築物，看看它負責什麼']]; },
-  tap: (s, id) => { const st = BILL[s.mi || 0][1]; s.note = id; if (s.si >= st.length) return;
-    if (st[s.si][0] === id) { s.trail.push(id); s.si++; s.msg = '✔ 送到了！'; } else s.msg = `「${GOV[id][0]}」不負責這一步，看看它的職權再想想。`; },
-  missions: BILL.map(b => M(b[0], s => { s.si = 0; s.trail = []; s.note = ''; s.msg = ''; }, s => s.si === b[1].length, b[2], s => { s.si = b[1].length; s.trail = b[1].map(x => x[0]); }, '先點每棟建築物，讀一下它的職權。'))
+    return svg(300, 172, g + T(150, 166, '起點', 'class="tk"') + T(at[0] + 20, at[1] - 18, '📜', 'font-size="16" pointer-events="none"')); },
+  read: s => { const st = BILL[s.mi || 0][1], n = s.trail.length;
+    return [[n < st.length ? '現在要決定' : '路線', n < st.length ? st[n][1] : '已經送完，按「確定作答」'], ['已送到', s.trail.map(k => GOV[k][0]).join(' → ') || '（還沒送出）'],
+      s.note ? [GOV[s.note][0], GOV[s.note][3]] : ['提示', '先點建築物，看看它負責什麼']]; },
+  tap: (s, id) => { s.note = id; },
+  missions: BILL.map(b => Object.assign(M(b[0], s => { s.trail = []; s.note = ''; }, s => s.trail.join() === b[1].map(x => x[0]).join(), b[2], s => { s.trail = b[1].map(x => x[0]); }, '先點每棟建築物，讀一下它的職權。'),
+    { why: s => { const w = b[1], k = w.findIndex((x, j) => s.trail[j] !== x[0]);
+      if (k < 0) return '公文多送了一站。';
+      if (k >= s.trail.length) return `還沒送完。${w[k][1]}`;
+      const a = GOV[s.trail[k]], c = GOV[w[k][0]];
+      return `${w[k][1]}你送到「${a[0]}」（${a[3]}），應該送到「${c[0]}」（${c[3]}）。`; } }))
 };
 
 const FAC = [['land', '🏕️ 土地（攤位）'], ['labor', '🧑‍🍳 勞動（店員）'], ['cap', '🧃 資本（果汁機、杯子）'], ['ent', '🧠 企業才能（老闆的規劃）'], ['cons', '🛍️ 消費者']];
@@ -334,11 +354,11 @@ L.ci9a2 = {
     if (s.mi === 1) { const [j, c] = prod(s); return `<table class="ptab"><tr><th></th><th>1 小時做果汁</th><th>或做鬆餅</th></tr><tr><td>小明</td><td>6 杯</td><td>3 份</td></tr><tr><td>小華</td><td>4 杯</td><td>4 份</td></tr></table><div class="emo">${'🥤'.repeat(j) || '　'}<br>${'🥞'.repeat(c) || '　'}</div>`; }
     if (s.mi === 2) return `<div class="emo big">🥤 × 50 杯</div><div class="meter"><i style="width:${(s.p - 20) / 20 * 100}%"></i></div>`;
     const n = ['land', 'labor', 'cap', 'ent'].filter(k => s[k]).length;
-    return `<div class="emo big">${n === 4 && !s.cons ? '🏭✨' : '🏚️'}</div><div class="emo">${FAC.filter(f => s[f[0]]).map(f => f[1].split(' ')[0]).join(' ') || '（還沒準備任何東西）'}</div>`; },
+    return `<div class="emo big">${s.judged && n === 4 && !s.cons ? '🏭✨' : '🏗️'}</div><div class="emo">${FAC.filter(f => s[f[0]]).map(f => f[1].split(' ')[0]).join(' ') || '（還沒準備任何東西）'}</div>`; },
   read: s => {
     if (s.mi === 1) { const [j, c] = prod(s); return [['果汁', j + ' 杯'], ['鬆餅', c + ' 份'], ['兩樣加起來', (j + c) + ' 個']]; }
     if (s.mi === 2) return [['收入', `${s.p} × 50 = ${s.p * 50} 元`], ['成本', '20 × 50 = 1000 元'], ['利潤', `${s.p * 50} − 1000 = ${(s.p - 20) * 50} 元`]];
-    return [['生產要素', ['land', 'labor', 'cap', 'ent'].filter(k => s[k]).length + ' / 4 準備好了']].concat(s.cons ? [['消費者', '消費者是「買」東西的人，不是生產要素喔']] : []); },
+    return [['已準備', FAC.filter(f => s[f[0]]).length + ' 樣']].concat(s.judged && s.cons ? [['消費者', '消費者是「買」東西的人，不是生產要素']] : []); },
   missions: [
     M('開店需要哪些「生產要素」？把它們都準備好（小心，有一個不是！）', s => { FAC.forEach(f => { s[f[0]] = false; }); }, s => s.land && s.labor && s.cap && s.ent && !s.cons,
       '**生產要素**有四種：土地、勞動、資本、企業才能。', s => { s.land = s.labor = s.cap = s.ent = true; s.cons = false; }, '誰是「生產」的，誰是「買」的？'),
@@ -390,15 +410,18 @@ L.ch7a2 = machine('譬喻組裝機', '譬喻有三個零件：**本體**（要�
 
 function comicLab(name, intro, stories) {
   return { name, intro,
-    init: () => ({ i: 0, ord: [], got: [], msg: '' }),
-    view: s => { const st = stories[s.i], done = s.got.length === st.p.length;
-      return `<div class="comic">${(s.ord.length ? s.ord : st.p.map((_, k) => k)).map(k => { const n = s.got.indexOf(k);
-        return `<div class="cp${n >= 0 ? ' on' : ''}" data-tap="${k}"><i>${n >= 0 ? n + 1 : '?'}</i><div class="ce">${st.p[k][0]}</div><small>${esc(st.p[k][1])}</small></div>`; }).join('')}</div>` +
-        (done ? `<div class="reveal">🎉 這個成語是「<b>${st.n}</b>」<br>${esc(st.m)}</div>` : `<p class="labnote">${s.msg ? '<b>' + s.msg + '</b>' : '依照故事發生的順序，一格一格點下去'}</p>`); },
+    init: () => ({ i: 0, ord: [], got: [] }),
+    view: s => { const st = stories[s.i], ord = s.ord.length ? s.ord : st.p.map((_, k) => k);
+      return `<div class="comic">${ord.map(k => { const n = s.got.indexOf(k);
+        return `<div class="cp${n >= 0 ? ' on' : ''}" ${s.judged ? '' : `data-tap="${k}"`}><i>${n >= 0 ? n + 1 : '?'}</i><div class="ce">${st.p[k][0]}</div><small>${esc(st.p[k][1])}</small></div>`; }).join('')}</div>` +
+        (s.judged ? `<div class="reveal">這個成語是「<b>${st.n}</b>」<br>${esc(st.m)}</div>` : '<p class="labnote">依照故事發生的順序點每一格（點最後一格可以取消），排好再按「確定作答」</p>'); },
     read: s => [['已排好', s.got.length + ' / ' + stories[s.i].p.length + ' 格']],
-    tap: (s, id) => { const k = +id; if (s.got.includes(k) || s.got.length === stories[s.i].p.length) return; if (k === s.got.length) { s.got.push(k); s.msg = ''; } else s.msg = '這一格還沒發生喔，想想故事怎麼發展。'; },
-    missions: stories.map((st, i) => M(`成語故事 ${i + 1}：把漫畫依照故事順序排好，看看是哪個成語`, s => { s.i = i; s.got = []; s.msg = ''; s.ord = shuffleNot(st.p.length); },
-      s => s.i === i && s.got.length === st.p.length, `**${st.n}**：${st.m}`, s => { s.got = st.p.map((_, k) => k); }, '先找出故事的開頭：事情是怎麼開始的？'))
+    tap: (s, id) => { const k = +id, n = s.got.indexOf(k); if (n >= 0) { if (n === s.got.length - 1) s.got.pop(); return; } if (s.got.length < stories[s.i].p.length) s.got.push(k); },
+    missions: stories.map((st, i) => Object.assign(M(`成語故事 ${i + 1}：把漫畫依照故事順序排好，看看是哪個成語`, s => { if (s.i !== i || !s.ord.length) { s.i = i; s.ord = shuffleNot(st.p.length); } s.got = []; },
+      s => s.i === i && s.got.join() === st.p.map((_, k) => k).join(), `**${st.n}**：${st.m}`, s => { s.got = st.p.map((_, k) => k); }, '先找出故事的開頭：事情是怎麼開始的？'),
+      { why: s => { const k = st.p.findIndex((_, j) => s.got[j] !== j);
+        if (k >= s.got.length) return `還沒排完：第 ${k + 1} 格應該是「${st.p[k][1]}」。`;
+        return `第 ${k + 1} 格你放了「${st.p[s.got[k]][1]}」，但故事的第 ${k + 1} 步是「${st.p[k][1]}」。`; } }))
   };
 }
 L.ch7b1 = comicLab('成語四格漫畫', '每個成語背後都有一個小故事。漫畫被打亂了，**依照故事順序點每一格**，排好就知道是哪個成語！', [
@@ -407,7 +430,7 @@ L.ch7b1 = comicLab('成語四格漫畫', '每個成語背後都有一個小故�
   { n: '亡羊補牢', m: '比喻犯錯後及時補救，還不算太晚。出自《戰國策》。', p: [['🐑🕳️', '羊圈破了一個洞，主人沒有理會'], ['🐺🐑', '狼從破洞鑽進來，叼走了羊'], ['🔨🪵', '主人趕快把羊圈修補好'], ['🐑🐑🐑', '從此羊再也沒有少過']] }
 ]);
 
-L.ch7b2 = huntLab('論語解碼器', '兩千多年前的句子，有些字的意思和現在不一樣。**點每一個有虛線的字**，看看它的意思，找出任務要的那個字！', [
+L.ch7b2 = huntLab('論語解碼器', '兩千多年前的句子，有些字的意思和現在不一樣。想想每個字的意思，**把任務要找的那個字標記起來**！', [
   { head: '📜《論語》', m: '找出這句話裡的「通同字」（借來代替另一個字的字）', say: '「說」通「**悅**」，喜悅。學了又時常溫習，不是很快樂嗎？',
     text: '{學|學習}{而|而且}{時|時常、按時}{習|溫習、練習}{之|它（學過的東西）}，{不亦|不也是}{說|通「悅」，喜悅（讀作ㄩㄝˋ），不是「說話」|*}{乎|嗎}？' },
   { head: '📜《論語》', m: '找出意思是「舊的、學過的」的那個字', say: '「**故**」是舊的、學過的知識。溫習舊知能領悟新道理，就可以當老師了。',
@@ -426,11 +449,11 @@ L.ch8a2 = machine('句型組裝機', '句子是「主語＋謂語」組成的，
    ['組出一個「敘事句」', s => { s.pre = '有一座古廟'; }, s => PRED[s.pre][0] === '敘事句', '**敘事句**敘述人或事物的動作。例：弟弟在公園放風箏。', s => { s.pre = '在公園放風箏'; }]]);
 
 const REC = { 林老師: ['道啟', '師長'], 祖父: ['鈞啟', '長輩'], 王小明同學: ['大啟', '平輩'] };
-L.ch8b2 = machine('信封設計室', '信封上，收件人姓名後面要加「**啟封詞**」，請對方打開信。寫給不同的人，用詞也不同。試試看哪一個最合適！',
+L.ch8b2 = machine('信封設計室', '信封上，收件人姓名後面要加「**啟封詞**」，請對方打開信。寫給不同的人，用詞也不同。想好哪一個最合適，再按「確定作答」！',
   [{ k: 'to', label: '收件人', opts: Object.keys(REC) }, { k: 'w', label: '啟封詞', opts: ['敬啟', '道啟', '鈞啟', '大啟'] }],
   s => { const ok = REC[s.to][0] === s.w;
     return { s: `<div class="env"><span class="stamp">📮</span><div class="eto">${s.to}　<b>${s.w}</b></div><div class="efrom">臺北市　王小美　緘</div></div>`,
-      n: s.w === '敬啟' ? '「敬啟」放在收件人後面，等於要對方「恭敬地打開」，不禮貌。' : ok ? `✅ 寫給${REC[s.to][1]}用「${s.w}」，正確！` : `寫給${REC[s.to][1]}，不適合用「${s.w}」。` }; },
+      n: !s.judged ? '選好啟封詞，再按「確定作答」。' : s.w === '敬啟' ? '「敬啟」放在收件人後面，等於要對方「恭敬地打開」，不禮貌。' : ok ? `寫給${REC[s.to][1]}用「${s.w}」。` : `寫給${REC[s.to][1]}，不適合用「${s.w}」。` }; },
   [['寫一封信給林老師', s => { s.to = '林老師'; s.w = '敬啟'; }, s => s.to === '林老師' && s.w === '道啟', '寫給師長用「**道啟**」。', s => { s.w = '道啟'; }, '老師是傳授「道」理的人。'],
    ['寫一封信給祖父', s => { s.to = '祖父'; s.w = '道啟'; }, s => s.to === '祖父' && s.w === '鈞啟', '寫給長輩用「**鈞啟**」（也可以用「賜啟」）。', s => { s.w = '鈞啟'; }, '「鈞」有尊貴的意思。'],
    ['寫一封信給同學王小明', s => { s.to = '王小明同學'; s.w = '鈞啟'; }, s => s.to === '王小明同學' && s.w === '大啟', '寫給平輩用「**大啟**」（也可以用「台啟」）。', s => { s.w = '大啟'; }, '同輩的朋友，大家一樣「大」。']]);
@@ -450,7 +473,7 @@ L.ch9a1 = timeLab('韻文時光列車', '中國韻文像一列火車，每個時
   ]
 });
 
-L.ch9a2 = huntLab('古今異義放大鏡', '有些詞在古文裡的意思和現在不一樣，叫做「**古今異義**」。**點有虛線的詞**看解釋，把古今異義的詞找出來！', [
+L.ch9a2 = huntLab('古今異義放大鏡', '有些詞在古文裡的意思和現在不一樣，叫做「**古今異義**」。想想每個詞在古文裡的意思，**把古今異義的詞標記起來**！', [
   { head: '〈桃花源記〉陶淵明', m: '找出 1 個古今異義的詞', say: '「阡陌**交通**」是田間小路交錯相通，不是現在的運輸。',
     text: '{土地平曠|土地平坦開闊}，{屋舍儼然|房屋整整齊齊}，{阡陌|田間的小路}{交通|★ 古今異義！古義：交錯相通；今義：運輸往來|*}，{雞犬相聞|雞鳴狗叫的聲音彼此都聽得到}。' },
   { head: '〈桃花源記〉陶淵明', m: '找出 2 個古今異義的詞', say: '「**妻子**」是妻子和兒女；「**絕境**」是與外界隔絕的地方。',
